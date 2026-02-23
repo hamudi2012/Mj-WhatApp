@@ -21,6 +21,7 @@
         #video-call-overlay { position: fixed; inset: 0; background: black; z-index: 5000; display: none; flex-direction: column; }
         .remote-video { width: 100%; height: 100%; object-fit: cover; }
         .local-video { width: 100px; height: 140px; position: absolute; top: 20px; right: 20px; border-radius: 10px; border: 2px solid var(--wa-green); object-fit: cover; z-index: 5001; }
+        .call-controls { position: absolute; bottom: 30px; width: 100%; display: flex; justify-content: center; z-index: 5002; }
 
         /* PROFILE DRAWER */
         #profile-drawer { position: fixed; top: 0; left: -100%; width: 85%; height: 100%; background: var(--wa-bg); z-index: 11000; transition: 0.4s; box-shadow: 5px 0 15px rgba(0,0,0,0.5); }
@@ -37,14 +38,13 @@
         
         #contact-list { flex: 1; overflow-y: auto; }
         #chat-messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-blend-mode: overlay; background-color: #0b141a; }
-        .msg { max-width: 80%; padding: 10px; border-radius: 12px; font-size: 0.9rem; }
+        .msg { max-width: 80%; padding: 10px; border-radius: 12px; font-size: 0.9rem; position: relative; }
         .msg.me { align-self: flex-end; background: var(--wa-msg-me); border-top-right-radius: 0; }
         .msg.him { align-self: flex-start; background: var(--wa-msg-him); border-top-left-radius: 0; }
 
         .chat-input-area { background: var(--wa-nav); padding: 10px; display: flex; gap: 10px; align-items: center; }
         #text-msg { flex: 1; background: #2a3942; border: none; border-radius: 20px; padding: 9px 15px; color: white; outline: none; }
         
-        /* Tombol Icon Baru */
         .icon-btn { background: none; border: none; color: var(--wa-icon); cursor: pointer; display: flex; align-items: center; padding: 5px; }
         .btn-vn.recording { color: #ff3b30; transform: scale(1.2); }
     </style>
@@ -74,7 +74,9 @@
 <div id="video-call-overlay">
     <video id="remote-video" class="remote-video" autoplay playsinline></video>
     <video id="local-video" class="local-video" autoplay muted playsinline></video>
-    <div class="call-controls"><button class="btn btn-danger rounded-circle p-3" onclick="endCall()">❌</button></div>
+    <div class="call-controls">
+        <button class="btn btn-danger rounded-circle p-3" onclick="endCall()">❌</button>
+    </div>
 </div>
 
 <div id="screen-login" class="justify-content-center p-4">
@@ -128,6 +130,7 @@
     const peer = new Peer();
     let myName = localStorage.getItem('mj_user'), targetPeerId, targetName, currentCall;
     let mediaRecorder, audioChunks = [];
+    let activeConn = null;
 
     window.onload = () => {
         setTimeout(() => {
@@ -185,8 +188,22 @@
 
     function clearMySession() { if(confirm("Hapus akun?")) { localStorage.clear(); location.reload(); } }
 
+    // --- PEER JS EVENT HANDLERS ---
+    peer.on('open', id => { if(myName) syncContact(myName, id); });
+
+    peer.on('connection', conn => {
+        activeConn = conn;
+        conn.on('data', data => {
+            saveMsg(data.sender, data.sender, data.val, 'him', data.type);
+            if(targetName === data.sender) {
+                appendUI(data.sender, data.val, 'him', data.type);
+            }
+            document.getElementById('notif-sound').play().catch(e=>{});
+        });
+    });
+
     peer.on('call', call => {
-        if(confirm("Video Call Masuk! Angkat?")) {
+        if(confirm("Video Call Masuk dari seseorang! Angkat?")) {
             navigator.mediaDevices.getUserMedia({video: true, audio: true}).then(stream => {
                 document.getElementById('video-call-overlay').style.display = 'flex';
                 document.getElementById('local-video').srcObject = stream;
@@ -197,26 +214,51 @@
         }
     });
 
-    peer.on('connection', conn => {
-        conn.on('data', data => {
-            saveMsg(data.sender, data.sender, data.val, 'him', data.type);
-            if(targetName === data.sender) appendUI(data.sender, data.val, 'him', data.type);
-            document.getElementById('notif-sound').play().catch(e=>{});
-        });
-    });
-
     function startVideoCall() {
         if(!targetPeerId) return alert("Kontak belum siap.");
         navigator.mediaDevices.getUserMedia({video: true, audio: true}).then(stream => {
             document.getElementById('video-call-overlay').style.display = 'flex';
             document.getElementById('local-video').srcObject = stream;
             const call = peer.call(targetPeerId, stream);
-            call.on('stream', rs => document.getElementById('remote-video').srcObject = rs);
+            call.on('stream', rs => {
+                document.getElementById('remote-video').srcObject = rs;
+            });
             currentCall = call;
-        }).catch(err => alert("Gagal akses kamera!"));
+        }).catch(err => alert("Gagal akses kamera/mic!"));
     }
 
-    function endCall() { if(currentCall) currentCall.close(); location.reload(); }
+    function endCall() { 
+        if(currentCall) currentCall.close(); 
+        document.getElementById('video-call-overlay').style.display = 'none';
+        const localVid = document.getElementById('local-video');
+        if(localVid.srcObject) {
+            localVid.srcObject.getTracks().forEach(track => track.stop());
+        }
+    }
+
+    // --- MESSAGE LOGIC ---
+    function sendData(val, type) {
+        saveMsg(targetName, myName, val, 'me', type);
+        
+        // Cek koneksi aktif biar gak reconnect terus-terusan
+        if (activeConn && activeConn.peer === targetPeerId && activeConn.open) {
+            activeConn.send({ type, sender: myName, val });
+        } else {
+            const conn = peer.connect(targetPeerId);
+            conn.on('open', () => {
+                activeConn = conn;
+                conn.send({ type, sender: myName, val });
+            });
+        }
+    }
+
+    function sendText() {
+        const msg = document.getElementById('text-msg').value.trim();
+        if(!msg || !targetPeerId) return;
+        sendData(msg, 'text'); 
+        appendUI(myName, msg, 'me', 'text');
+        document.getElementById('text-msg').value = "";
+    }
 
     function startVN() {
         navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
@@ -232,31 +274,33 @@
         mediaRecorder.onstop = () => {
             const blob = new Blob(audioChunks, { type: 'audio/webm' });
             const reader = new FileReader(); reader.readAsDataURL(blob);
-            reader.onloadend = () => { sendData(reader.result, 'vn'); appendUI(myName, reader.result, 'me', 'vn'); };
+            reader.onloadend = () => { 
+                sendData(reader.result, 'vn'); 
+                appendUI(myName, reader.result, 'me', 'vn'); 
+            };
         };
-    }
-
-    function sendText() {
-        const msg = document.getElementById('text-msg').value.trim();
-        if(!msg) return;
-        sendData(msg, 'text'); appendUI(myName, msg, 'me', 'text');
-        document.getElementById('text-msg').value = "";
-    }
-
-    function sendData(val, type) {
-        saveMsg(targetName, myName, val, 'me', type);
-        const conn = peer.connect(targetPeerId);
-        conn.on('open', () => conn.send({ type, sender: myName, val }));
     }
 
     function appendUI(s, t, side, type) {
         const box = document.getElementById('chat-messages');
         const div = document.createElement('div'); div.className = `msg ${side}`;
         let content = type === 'text' ? `<div>${t}</div>` : `<audio controls src="${t}" style="width:180px;height:35px;"></audio>`;
-        div.innerHTML = `<small class="text-info fw-bold" style="font-size:0.7rem">${s}</small>${content}`;
+        div.innerHTML = `<small class="text-info fw-bold" style="font-size:0.7rem; display:block; margin-bottom:2px;">${s}</small>${content}`;
         box.appendChild(div); box.scrollTop = box.scrollHeight;
     }
 
+    function saveMsg(contactKey, s, t, side, type) {
+        let h = JSON.parse(localStorage.getItem('chat_'+contactKey) || "[]");
+        h.push({sender:s, text:t, side, type});
+        localStorage.setItem('chat_'+contactKey, JSON.stringify(h));
+    }
+
+    function loadHistory(contactKey) {
+        const box = document.getElementById('chat-messages'); box.innerHTML = "";
+        JSON.parse(localStorage.getItem('chat_'+contactKey) || "[]").forEach(m => appendUI(m.sender, m.text, m.side, m.type));
+    }
+
+    // --- CONTACTS & SYNC ---
     async function fetchContacts() {
         try {
             const res = await fetch(`https://hamudi2012.github.io/Mj-WhatApp/contacts.json?t=${Date.now()}`);
@@ -266,7 +310,7 @@
                 if(n === myName) continue;
                 const item = document.createElement('div'); item.className = "p-3 border-bottom d-flex align-items-center justify-content-between";
                 item.innerHTML = `
-                    <div class="d-flex align-items-center gap-3" style="cursor:pointer" onclick="openChat('${n}', '${data[n]}')">
+                    <div class="d-flex align-items-center gap-3" style="cursor:pointer; flex:1" onclick="openChat('${n}', '${data[n]}')">
                         <div class="avatar">${n[0].toUpperCase()}</div>
                         <b>${n}</b>
                     </div>
@@ -284,6 +328,22 @@
         loadHistory(name);
     }
 
+    function closeChat() { document.getElementById('chat-window').style.display='none'; }
+
+    async function syncContact(n, id) {
+        const t = localStorage.getItem('_mj_wa_tkn');
+        if(!t) return;
+        try {
+            const r = await fetch(`https://api.github.com/repos/${REPO}/contents/contacts.json`, {headers:{'Authorization':`token ${t}`}});
+            const d = await r.json(); const c = JSON.parse(atob(d.content)); 
+            c[n]=id;
+            await fetch(`https://api.github.com/repos/${REPO}/contents/contacts.json`, {
+                method:'PUT', headers:{'Authorization':`token ${t}`},
+                body:JSON.stringify({message:"Update ID", content:btoa(JSON.stringify(c)), sha:d.sha})
+            });
+        } catch(e){}
+    }
+
     async function deleteUser(u) {
         if(!confirm(`Hapus ${u}?`)) return;
         const t = localStorage.getItem('_mj_wa_tkn');
@@ -296,32 +356,6 @@
         });
         fetchContacts();
     }
-
-    function saveMsg(c, s, t, side, type) {
-        let h = JSON.parse(localStorage.getItem('chat_'+c) || "[]");
-        h.push({sender:s, text:t, side, type});
-        localStorage.setItem('chat_'+c, JSON.stringify(h));
-    }
-
-    function loadHistory(c) {
-        const box = document.getElementById('chat-messages'); box.innerHTML = "";
-        JSON.parse(localStorage.getItem('chat_'+c) || "[]").forEach(m => appendUI(m.sender, m.text, m.side, m.type));
-    }
-
-    function closeChat() { document.getElementById('chat-window').style.display='none'; }
-
-    async function syncContact(n, id) {
-        const t = localStorage.getItem('_mj_wa_tkn');
-        try {
-            const r = await fetch(`https://api.github.com/repos/${REPO}/contents/contacts.json`, {headers:{'Authorization':`token ${t}`}});
-            const d = await r.json(); const c = JSON.parse(atob(d.content)); c[n]=id;
-            await fetch(`https://api.github.com/repos/${REPO}/contents/contacts.json`, {
-                method:'PUT', headers:{'Authorization':`token ${t}`},
-                body:JSON.stringify({message:"Update ID", content:btoa(JSON.stringify(c)), sha:d.sha})
-            });
-        } catch(e){}
-    }
-    peer.on('open', id => { if(myName) syncContact(myName, id); });
 </script>
 </body>
 </html>
