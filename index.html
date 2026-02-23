@@ -30,7 +30,7 @@
     <div style="font-size: 4rem; margin-bottom: 10px;">🟢</div>
     <h2 style="color: var(--wa-green); font-weight: 900;">Mj-WhatsApp</h2>
     <div class="w-100" style="max-width: 300px;">
-        <input type="text" id="username-input" class="form-control mb-3 text-center" placeholder="Nama Kamu..." style="background: #2a3942; border: none; color: white; border-radius: 12px; padding: 12px;">
+        <input type="text" id="username-input" class="form-control mb-3 text-center" placeholder="Namamu..." style="background: #2a3942; border: none; color: white; border-radius: 12px; padding: 12px;">
         <button class="btn btn-success w-100" onclick="handleLogin()" style="border-radius: 12px; padding: 12px; font-weight: bold;">MASUK</button>
     </div>
 </div>
@@ -52,12 +52,13 @@
 </div>
 
 <script>
-    // FIX USERNAME DISINI BRO!
-    const REPO = "hamudi/Mj-WhatsApp"; 
+    // SESUAI LINK YANG LO KASIH JALAN:
+    const REPO = "hamudi2012/Mj-WhatApp"; 
     const peer = new Peer();
     let myName = localStorage.getItem('mj_user');
     let localStream, currentCall, lastData = "";
 
+    // Ambil token dari URL (?key=ghp_xxx)
     const urlParams = new URLSearchParams(window.location.search);
     const key = urlParams.get('key');
     if (key) {
@@ -78,7 +79,8 @@
     async function handleLogin() {
         const input = document.getElementById('username-input').value.trim();
         const token = localStorage.getItem('_mj_wa_tkn');
-        if (!input || !token) return alert("Cek Nama / Link Token lo!");
+        if (!input) return alert("Isi namamu!");
+        if (!token) return alert("Butuh link ?key=ghp_TOKEN_LO");
         localStorage.setItem('mj_user', input);
         myName = input;
         goToHome();
@@ -102,7 +104,7 @@
                 method: 'PUT',
                 headers: { 'Authorization': `token ${token}` },
                 body: JSON.stringify({
-                    message: "Update: " + name,
+                    message: "Sync: " + name,
                     content: btoa(JSON.stringify(contacts)),
                     sha: data.sha
                 })
@@ -111,7 +113,8 @@
     }
 
     async function fetchContacts() {
-        const url = `https://hamudi.github.io/Mj-WhatsApp/contacts.json?t=${Date.now()}`;
+        // PAKE JALUR YANG LO BILANG JALAN
+        const url = `https://hamudi2012.github.io/Mj-WhatApp/contacts.json?t=${Date.now()}`;
         try {
             const res = await fetch(url);
             const contacts = await res.json();
@@ -142,7 +145,7 @@
     }
 
     peer.on('call', call => {
-        if(confirm("Angkat Video Call?")) {
+        if(confirm("Terima panggilan?")) {
             navigator.mediaDevices.getUserMedia({video: true, audio: true}).then(stream => {
                 localStream = stream;
                 document.getElementById('local-video').srcObject = stream;
@@ -161,5 +164,5 @@
     }
 </script>
 </body>
-    </html>
+        </html>
     
