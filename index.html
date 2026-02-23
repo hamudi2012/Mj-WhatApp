@@ -3,84 +3,126 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mj-WhatsApp</title>
+    <title>Mj-WhatsApp Private</title>
     <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
     <style>
         :root { --wa-dark: #0b141a; --wa-nav: #202c33; --wa-green: #00a884; }
         body { background: var(--wa-dark); color: #e9edef; font-family: sans-serif; height: 100dvh; display: flex; flex-direction: column; margin: 0; overflow: hidden; }
-        
+        #login-screen { position: fixed; inset: 0; background: var(--wa-dark); z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; }
         .header { background: var(--wa-nav); padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; }
-        .header h5 { color: var(--wa-green); margin: 0; font-weight: bold; font-size: 1rem; }
-
-        /* AREA CHAT DINAMIS */
-        #chat-area { flex: 1; display: flex; flex-direction: column; padding: 15px; overflow-y: auto; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-blend-mode: overlay; padding-bottom: 20px; }
-        .msg { max-width: 80%; padding: 10px; border-radius: 10px; margin-bottom: 10px; font-size: 0.85rem; background: var(--wa-nav); align-self: flex-start; }
-        .msg.out { background: #005c4b; align-self: flex-end; }
-
-        /* FOOTER KONTROL (NAIK KE ATAS) */
-        .controls-footer { 
-            background: var(--wa-nav); 
-            padding: 10px 10px 30px 10px; /* Padding bawah extra biar muncul di HP */
-            border-top: 1px solid #333;
-            z-index: 100;
-        }
-        .input-group-wa { display: flex; gap: 8px; align-items: center; }
-        .input-wa { background: #2a3942; border: none; color: #fff; border-radius: 25px; padding: 10px 18px; flex: 1; outline: none; font-size: 0.9rem; }
-        .btn-wa { background: var(--wa-green); border: none; width: 45px; height: 45px; border-radius: 50%; color: #fff; display: flex; align-items: center; justify-content: center; }
-        
-        /* VIDEO CALL OVERLAY */
-        #video-area { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 2000; display: none; }
+        #contact-list { flex: 1; overflow-y: auto; padding: 10px; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-blend-mode: overlay; }
+        .contact-card { background: var(--wa-nav); padding: 15px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 5px solid var(--wa-green); }
+        .btn-call { background: var(--wa-green); border: none; width: 45px; height: 45px; border-radius: 50%; color: white; font-size: 1.2rem; }
+        #video-area { position: fixed; inset: 0; background: #000; z-index: 2000; display: none; }
         #remote-video { width: 100%; height: 100%; object-fit: cover; }
-        #local-video { width: 90px; height: 130px; position: absolute; top: 20px; right: 20px; border: 2px solid var(--wa-green); border-radius: 10px; object-fit: cover; z-index: 2100; }
-        .btn-hangup { position: fixed; bottom: 50px; left: 50%; transform: translateX(-50%); background: #ea0038; border: none; width: 60px; height: 60px; border-radius: 50%; color: #fff; font-size: 1.5rem; z-index: 2200; }
+        #local-video { width: 90px; height: 130px; position: absolute; top: 20px; right: 20px; border: 2px solid var(--wa-green); border-radius: 10px; object-fit: cover; }
     </style>
 </head>
 <body>
 
+<div id="login-screen">
+    <h2 style="color: var(--wa-green); font-weight: 800;">Mj-WhatsApp</h2>
+    <input type="text" id="username-input" class="form-control mb-3 text-center" placeholder="Nama Kamu..." style="background: #2a3942; border: none; color: white;">
+    <button class="btn btn-success w-100" onclick="startApp()">MASUK JARINGAN</button>
+</div>
+
 <div class="header">
-    <div>
-        <h5>Mj-WhatsApp</h5>
-        <div id="my-id-display" style="font-size: 0.55rem; color: #888;">Connecting...</div>
-    </div>
-    <div class="d-flex gap-2">
-        <button class="btn btn-sm btn-dark" onclick="resetToken()" style="font-size: 0.6rem;">⚙️ TOKEN</button>
-        <button class="btn btn-sm btn-success" onclick="startCall()" style="font-size: 0.6rem; font-weight: bold;">📞 VIDEO</button>
-    </div>
+    <h5 id="my-name-display" style="margin:0; color: var(--wa-green);">Mj-WhatsApp</h5>
+    <button class="btn btn-sm btn-outline-light" onclick="loadContacts()">🔄 Refresh Kontak</button>
 </div>
 
-<div id="chat-area">
-    <div class="msg"><b>Sistem:</b> ID lo ada di kiri atas. Share ke temen buat Call.</div>
-    <div class="msg"><b>Tips:</b> Kalo error 'Bad Credentials', klik tombol ⚙️ TOKEN dan masukin token ghp_ yang baru.</div>
-</div>
-
-<div class="controls-footer">
-    <div class="input-group-wa">
-        <input type="text" id="target-id" class="input-wa" placeholder="Masukkan ID atau Pesan...">
-        <button class="btn-wa" onclick="sendMsg()">
-            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M1.101 21.757L23.8 12.028 1.101 2.3l.011 7.912 13.623 1.816-13.623 1.817-.011 7.912z"></path></svg>
-        </button>
-    </div>
+<div id="contact-list">
+    <p class="text-center" style="color:#888; margin-top:50px;">Memuat kontak...</p>
 </div>
 
 <div id="video-area">
     <video id="local-video" autoplay muted playsinline></video>
     <video id="remote-video" autoplay playsinline></video>
-    <button class="btn-hangup" onclick="endCall()">×</button>
+    <button class="btn btn-danger" style="position:fixed; bottom:50px; left:50%; transform:translateX(-50%); width:60px; height:60px; border-radius:50%;" onclick="endCall()">×</button>
 </div>
 
 <script>
+    const REPO = "hamudi2012/Mj-WhatsApp";
     const peer = new Peer();
+    let myName = localStorage.getItem('mj_user');
     let localStream, currentCall;
 
-    // Ambil ID Sendiri
+    if(myName) {
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('my-name-display').innerText = myName;
+    }
+
+    // SAAT USER DAPAT ID PEER
     peer.on('open', id => {
-        document.getElementById('my-id-display').innerText = "ID: " + id;
+        if(myName) syncContact(myName, id);
     });
 
-    // Terima Panggilan
+    async function startApp() {
+        const name = document.getElementById('username-input').value.trim();
+        if(!name) return alert("Isi nama dulu!");
+        localStorage.setItem('mj_user', name);
+        location.reload();
+    }
+
+    // SISTEM AUTO-DATABASE (Full Atek GitHub API)
+    async function syncContact(name, id) {
+        const token = localStorage.getItem('_mj_wa_tkn'); // Token Admin
+        if(!token) return loadContacts(); 
+
+        try {
+            const res = await fetch(`https://api.github.com/repos/${REPO}/contents/contacts.json`, {
+                headers: { 'Authorization': `token ${token}` }
+            });
+            const data = await res.json();
+            const contacts = JSON.parse(atob(data.content));
+            
+            // Tambah/Update ID user
+            contacts[name] = id;
+
+            await fetch(`https://api.github.com/repos/${REPO}/contents/contacts.json`, {
+                method: 'PUT',
+                headers: { 'Authorization': `token ${token}` },
+                body: JSON.stringify({
+                    message: "Sync Contact",
+                    content: btoa(JSON.stringify(contacts)),
+                    sha: data.sha
+                })
+            });
+            loadContacts();
+        } catch(e) { console.error("Sync Gagal", e); loadContacts(); }
+    }
+
+    async function loadContacts() {
+        const list = document.getElementById('contact-list');
+        try {
+            const res = await fetch(`https://raw.githubusercontent.com/${REPO}/main/contacts.json?t=${Date.now()}`);
+            const contacts = await res.json();
+            list.innerHTML = "";
+            for(let name in contacts) {
+                if(name === myName) continue; // Jangan telpon diri sendiri
+                const card = document.createElement('div');
+                card.className = "contact-card";
+                card.innerHTML = `<span><b>${name}</b><br><small style="color:#888">Online</small></span>
+                                  <button class="btn-call" onclick="makeCall('${contacts[name]}')">📞</button>`;
+                list.appendChild(card);
+            }
+        } catch(e) { list.innerHTML = "Gagal memuat kontak."; }
+    }
+
+    function makeCall(tid) {
+        navigator.mediaDevices.getUserMedia({video: true, audio: true}).then(stream => {
+            localStream = stream;
+            document.getElementById('local-video').srcObject = stream;
+            document.getElementById('video-area').style.display = 'block';
+            const call = peer.call(tid, stream);
+            call.on('stream', rs => document.getElementById('remote-video').srcObject = rs);
+            currentCall = call;
+        });
+    }
+
     peer.on('call', call => {
-        if(confirm("Ada Video Call masuk! Terima?")) {
+        if(confirm("Video Call Masuk!")) {
             navigator.mediaDevices.getUserMedia({video: true, audio: true}).then(stream => {
                 localStream = stream;
                 document.getElementById('local-video').srcObject = stream;
@@ -92,46 +134,11 @@
         }
     });
 
-    function startCall() {
-        const tid = document.getElementById('target-id').value;
-        if(!tid) return alert("Masukin ID temen lo di kotak input dulu!");
-        
-        navigator.mediaDevices.getUserMedia({video: true, audio: true}).then(stream => {
-            localStream = stream;
-            document.getElementById('local-video').srcObject = stream;
-            document.getElementById('video-area').style.display = 'block';
-            const call = peer.call(tid, stream);
-            call.on('stream', rs => document.getElementById('remote-video').srcObject = rs);
-            currentCall = call;
-        });
-    }
-
     function endCall() {
         if(currentCall) currentCall.close();
-        if(localStream) localStream.getTracks().forEach(track => track.stop());
+        if(localStream) localStream.getTracks().forEach(t => t.stop());
         document.getElementById('video-area').style.display = 'none';
     }
-
-    function sendMsg() {
-        const inp = document.getElementById('target-id');
-        if(!inp.value) return;
-        const msg = document.createElement('div');
-        msg.className = "msg out";
-        msg.innerText = inp.value;
-        document.getElementById('chat-area').appendChild(msg);
-        inp.value = "";
-        document.getElementById('chat-area').scrollTop = document.getElementById('chat-area').scrollHeight;
-    }
-
-    function resetToken() {
-        const t = prompt("Masukkan GitHub Token (ghp_...) baru:");
-        if(t) {
-            localStorage.setItem('_mj_wa_tkn', t.trim());
-            alert("Token disimpan di HP lo!");
-            location.reload();
-        }
-    }
 </script>
-
 </body>
 </html>
