@@ -3,33 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mj-WhatsApp Private</title>
+    <title>Mj-WhatsApp</title>
     <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
     <style>
         :root { --wa-dark: #0b141a; --wa-nav: #202c33; --wa-green: #00a884; }
-        body { background: var(--wa-dark); color: #e9edef; font-family: sans-serif; height: 100dvh; display: flex; flex-direction: column; margin: 0; }
+        body { background: var(--wa-dark); color: #e9edef; font-family: sans-serif; height: 100dvh; display: flex; flex-direction: column; margin: 0; overflow: hidden; }
         
-        .header { background: var(--wa-nav); padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; }
-        .header h5 { color: var(--wa-green); margin: 0; font-weight: bold; }
+        .header { background: var(--wa-nav); padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; }
+        .header h5 { color: var(--wa-green); margin: 0; font-weight: bold; font-size: 1rem; }
 
-        #chat-area { flex: 1; display: flex; flex-direction: column; padding: 15px; overflow-y: auto; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-blend-mode: overlay; }
-        .msg { max-width: 80%; padding: 10px; border-radius: 10px; margin-bottom: 10px; font-size: 0.9rem; background: var(--wa-nav); align-self: flex-start; }
+        /* AREA CHAT DINAMIS */
+        #chat-area { flex: 1; display: flex; flex-direction: column; padding: 15px; overflow-y: auto; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-blend-mode: overlay; padding-bottom: 20px; }
+        .msg { max-width: 80%; padding: 10px; border-radius: 10px; margin-bottom: 10px; font-size: 0.85rem; background: var(--wa-nav); align-self: flex-start; }
         .msg.out { background: #005c4b; align-self: flex-end; }
 
-        /* FIXED BOTTOM UI */
-        .controls-wrapper { 
+        /* FOOTER KONTROL (NAIK KE ATAS) */
+        .controls-footer { 
             background: var(--wa-nav); 
-            padding: 10px 10px 40px 10px; /* Padding bawah extra biar gak ketutup bar HP */
+            padding: 10px 10px 30px 10px; /* Padding bawah extra biar muncul di HP */
             border-top: 1px solid #333;
+            z-index: 100;
         }
-        .input-group-custom { display: flex; gap: 8px; align-items: center; }
-        .input-wa { background: #2a3942; border: none; color: #fff; border-radius: 25px; padding: 12px 20px; flex: 1; outline: none; font-size: 1rem; }
-        .btn-wa { background: var(--wa-green); border: none; width: 50px; height: 50px; border-radius: 50%; color: #fff; display: flex; align-items: center; justify-content: center; }
+        .input-group-wa { display: flex; gap: 8px; align-items: center; }
+        .input-wa { background: #2a3942; border: none; color: #fff; border-radius: 25px; padding: 10px 18px; flex: 1; outline: none; font-size: 0.9rem; }
+        .btn-wa { background: var(--wa-green); border: none; width: 45px; height: 45px; border-radius: 50%; color: #fff; display: flex; align-items: center; justify-content: center; }
         
-        #video-area { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 1000; display: none; }
+        /* VIDEO CALL OVERLAY */
+        #video-area { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 2000; display: none; }
         #remote-video { width: 100%; height: 100%; object-fit: cover; }
-        #local-video { width: 100px; height: 150px; position: absolute; top: 20px; right: 20px; border: 2px solid var(--wa-green); border-radius: 10px; object-fit: cover; }
+        #local-video { width: 90px; height: 130px; position: absolute; top: 20px; right: 20px; border: 2px solid var(--wa-green); border-radius: 10px; object-fit: cover; z-index: 2100; }
+        .btn-hangup { position: fixed; bottom: 50px; left: 50%; transform: translateX(-50%); background: #ea0038; border: none; width: 60px; height: 60px; border-radius: 50%; color: #fff; font-size: 1.5rem; z-index: 2200; }
     </style>
 </head>
 <body>
@@ -37,18 +41,22 @@
 <div class="header">
     <div>
         <h5>Mj-WhatsApp</h5>
-        <div id="my-id" style="font-size: 0.6rem; color: #888;">Connecting...</div>
+        <div id="my-id-display" style="font-size: 0.55rem; color: #888;">Connecting...</div>
     </div>
-    <button class="btn btn-sm btn-outline-success" onclick="startCall()">📞 VIDEO</button>
+    <div class="d-flex gap-2">
+        <button class="btn btn-sm btn-dark" onclick="resetToken()" style="font-size: 0.6rem;">⚙️ TOKEN</button>
+        <button class="btn btn-sm btn-success" onclick="startCall()" style="font-size: 0.6rem; font-weight: bold;">📞 VIDEO</button>
+    </div>
 </div>
 
 <div id="chat-area">
-    <div class="msg">ID lo ada di pojok kiri atas. Masukin ID temen lo di bawah buat manggil.</div>
+    <div class="msg"><b>Sistem:</b> ID lo ada di kiri atas. Share ke temen buat Call.</div>
+    <div class="msg"><b>Tips:</b> Kalo error 'Bad Credentials', klik tombol ⚙️ TOKEN dan masukin token ghp_ yang baru.</div>
 </div>
 
-<div class="controls-wrapper">
-    <div class="input-group-custom">
-        <input type="text" id="target-id" class="input-wa" placeholder="Ketik ID atau pesan...">
+<div class="controls-footer">
+    <div class="input-group-wa">
+        <input type="text" id="target-id" class="input-wa" placeholder="Masukkan ID atau Pesan...">
         <button class="btn-wa" onclick="sendMsg()">
             <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M1.101 21.757L23.8 12.028 1.101 2.3l.011 7.912 13.623 1.816-13.623 1.817-.011 7.912z"></path></svg>
         </button>
@@ -58,17 +66,21 @@
 <div id="video-area">
     <video id="local-video" autoplay muted playsinline></video>
     <video id="remote-video" autoplay playsinline></video>
-    <button class="btn btn-danger" style="position:fixed; bottom:50px; left:50%; transform:translateX(-50%); border-radius:50%; width:60px; height:60px;" onclick="endCall()">X</button>
+    <button class="btn-hangup" onclick="endCall()">×</button>
 </div>
 
 <script>
     const peer = new Peer();
     let localStream, currentCall;
 
-    peer.on('open', id => document.getElementById('my-id').innerText = "MY ID: " + id);
+    // Ambil ID Sendiri
+    peer.on('open', id => {
+        document.getElementById('my-id-display').innerText = "ID: " + id;
+    });
 
+    // Terima Panggilan
     peer.on('call', call => {
-        if(confirm("Terima video call?")) {
+        if(confirm("Ada Video Call masuk! Terima?")) {
             navigator.mediaDevices.getUserMedia({video: true, audio: true}).then(stream => {
                 localStream = stream;
                 document.getElementById('local-video').srcObject = stream;
@@ -82,7 +94,8 @@
 
     function startCall() {
         const tid = document.getElementById('target-id').value;
-        if(!tid) return alert("Isi ID tujuan!");
+        if(!tid) return alert("Masukin ID temen lo di kotak input dulu!");
+        
         navigator.mediaDevices.getUserMedia({video: true, audio: true}).then(stream => {
             localStream = stream;
             document.getElementById('local-video').srcObject = stream;
@@ -95,19 +108,30 @@
 
     function endCall() {
         if(currentCall) currentCall.close();
-        if(localStream) localStream.getTracks().forEach(t => t.stop());
+        if(localStream) localStream.getTracks().forEach(track => track.stop());
         document.getElementById('video-area').style.display = 'none';
     }
 
     function sendMsg() {
         const inp = document.getElementById('target-id');
         if(!inp.value) return;
-        const d = document.createElement('div');
-        d.className = "msg out";
-        d.innerText = inp.value;
-        document.getElementById('chat-area').appendChild(d);
+        const msg = document.createElement('div');
+        msg.className = "msg out";
+        msg.innerText = inp.value;
+        document.getElementById('chat-area').appendChild(msg);
         inp.value = "";
+        document.getElementById('chat-area').scrollTop = document.getElementById('chat-area').scrollHeight;
+    }
+
+    function resetToken() {
+        const t = prompt("Masukkan GitHub Token (ghp_...) baru:");
+        if(t) {
+            localStorage.setItem('_mj_wa_tkn', t.trim());
+            alert("Token disimpan di HP lo!");
+            location.reload();
+        }
     }
 </script>
+
 </body>
 </html>
