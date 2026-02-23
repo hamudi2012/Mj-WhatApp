@@ -17,40 +17,36 @@
         #splash-screen { position: fixed; inset: 0; background: var(--wa-bg); z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s ease; }
         .splash-logo { width: 100px; height: 100px; border-radius: 25px; margin-bottom: 20px; box-shadow: 0 0 20px rgba(0,168,132,0.3); }
 
+        /* VIDEO CALL UI */
+        #video-call-overlay { position: fixed; inset: 0; background: black; z-index: 5000; display: none; flex-direction: column; }
+        .remote-video { width: 100%; height: 100%; object-fit: cover; }
+        .local-video { width: 100px; height: 140px; position: absolute; top: 20px; right: 20px; border-radius: 10px; border: 2px solid var(--wa-green); object-fit: cover; z-index: 5001; }
+
         /* PROFILE DRAWER */
         #profile-drawer { position: fixed; top: 0; left: -100%; width: 85%; height: 100%; background: var(--wa-bg); z-index: 11000; transition: 0.4s; box-shadow: 5px 0 15px rgba(0,0,0,0.5); }
         #profile-drawer.open { left: 0; }
         .drawer-header { background: var(--wa-nav); padding: 40px 20px 20px; color: white; }
-        .drawer-item { padding: 18px 25px; display: flex; align-items: center; gap: 20px; border-bottom: 0.5px solid #222; cursor: pointer; }
+        .drawer-item { padding: 18px 25px; display: flex; align-items: center; gap: 20px; border-bottom: 0.5px solid #222; }
         .overlay-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 10999; display: none; }
 
         /* UI ELEMENTS */
         #screen-login, #screen-home, #chat-window { position: fixed; inset: 0; display: none; flex-direction: column; background: var(--wa-bg); }
         .nav-header { background: var(--wa-nav); padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; }
-        
-        .icon-btn { 
-            background: none; border: none; color: var(--wa-icon); cursor: pointer; 
-            display: flex; align-items: center; justify-content: center;
-            width: 45px; height: 45px; border-radius: 50%;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        .avatar { width: 45px; height: 45px; background: var(--wa-green); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; object-fit: cover; overflow: hidden; cursor: pointer; color: white; }
+        .avatar { width: 45px; height: 45px; background: var(--wa-green); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; object-fit: cover; overflow: hidden; cursor: pointer; }
         .avatar img { width: 100%; height: 100%; object-fit: cover; }
         
         #contact-list { flex: 1; overflow-y: auto; }
         #chat-messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-blend-mode: overlay; background-color: #0b141a; }
-        .msg { max-width: 80%; padding: 10px; border-radius: 12px; font-size: 0.9rem; position: relative; }
+        .msg { max-width: 80%; padding: 10px; border-radius: 12px; font-size: 0.9rem; }
         .msg.me { align-self: flex-end; background: var(--wa-msg-me); border-top-right-radius: 0; }
         .msg.him { align-self: flex-start; background: var(--wa-msg-him); border-top-left-radius: 0; }
-        .msg-status { font-size: 0.65rem; opacity: 0.6; text-align: right; margin-top: 4px; }
 
         .chat-input-area { background: var(--wa-nav); padding: 10px; display: flex; gap: 10px; align-items: center; }
-        #text-msg { flex: 1; background: #2a3942; border: none; border-radius: 20px; padding: 10px 15px; color: white; outline: none; }
-
-        #video-call-overlay { position: fixed; inset: 0; background: black; z-index: 15000; display: none; flex-direction: column; }
-        .remote-video { width: 100%; height: 100%; object-fit: cover; }
-        .local-video { width: 100px; height: 140px; position: absolute; top: 20px; right: 20px; border-radius: 10px; border: 2px solid var(--wa-green); object-fit: cover; }
+        #text-msg { flex: 1; background: #2a3942; border: none; border-radius: 20px; padding: 9px 15px; color: white; outline: none; }
+        
+        /* Tombol Icon Baru */
+        .icon-btn { background: none; border: none; color: var(--wa-icon); cursor: pointer; display: flex; align-items: center; padding: 5px; }
+        .btn-vn.recording { color: #ff3b30; transform: scale(1.2); }
     </style>
 </head>
 <body>
@@ -66,18 +62,25 @@
         <div class="avatar mx-auto mb-3" id="my-avatar-big" style="width:100px; height:100px; font-size:2.5rem;" onclick="document.getElementById('poto-asli').click()">M</div>
         <input type="file" id="poto-asli" hidden accept="image/*" onchange="gantiPoto(this)">
         <h4 id="my-profile-name" class="fw-bold">User</h4>
-        <p class="small text-success">Klik foto untuk ganti foto asli</p>
+        <p class="small text-success">Klik foto untuk ganti poto asli</p>
     </div>
     <div class="drawer-body">
         <div class="drawer-item"><span>🔑</span> <b>Account</b></div>
-        <div class="drawer-item" onclick="clearMySession()" style="color:#ff5c5c"><span>🚪</span> <b>Hapus Akun / Logout</b></div>
+        <div class="drawer-item"><span>💬</span> <b>Chats</b></div>
+        <div class="drawer-item" onclick="clearMySession()" style="color:#ff5c5c"><span>🚪</span> <b>Log Out</b></div>
     </div>
 </div>
 
+<div id="video-call-overlay">
+    <video id="remote-video" class="remote-video" autoplay playsinline></video>
+    <video id="local-video" class="local-video" autoplay muted playsinline></video>
+    <div class="call-controls"><button class="btn btn-danger rounded-circle p-3" onclick="endCall()">❌</button></div>
+</div>
+
 <div id="screen-login" class="justify-content-center p-4">
-    <div class="text-center mb-4"><img src="logo-mj-whatsapp.png" style="width:70px; border-radius:15px;" onerror="this.src='https://cdn-icons-png.flaticon.com/512/124/124034.png'"><h3 class="mt-3 fw-bold">Masuk Mj-WA</h3></div>
-    <input type="text" id="username-input" class="form-control mb-3" placeholder="Masukkan Nama Kamu..." style="background:#2a3942;color:white;border:none;">
-    <button class="btn btn-success w-100 fw-bold" onclick="handleLogin()">MULAI CHAT</button>
+    <div class="text-center mb-4"><img src="logo-mj-whatsapp.png" style="width:70px; border-radius:15px;"><h3 class="mt-3 fw-bold">Masuk Mj-WA</h3></div>
+    <input type="text" id="username-input" class="form-control mb-3" placeholder="Nama lo..." style="background:#2a3942;color:white;border:none;">
+    <button class="btn btn-success w-100 fw-bold" onclick="handleLogin()">GAS CHAT!</button>
 </div>
 
 <div id="screen-home">
@@ -86,10 +89,12 @@
             <div class="avatar" id="my-avatar-small" style="width:35px; height:35px; font-size:0.9rem;" onclick="toggleDrawer()">M</div>
             <b class="text-success">Mj-WhatsApp</b>
         </div>
-        <div class="d-flex gap-2">
-            <span class="icon-btn" style="width:30px">🔍</span>
-            <span class="icon-btn" style="width:30px" onclick="toggleDrawer()">⋮</span>
-        </div>
+        <div class="d-flex gap-3"><span>🔍</span><span onclick="toggleDrawer()" style="cursor:pointer">⋮</span></div>
+    </div>
+    <div class="d-flex bg-nav text-center py-2" style="background:var(--wa-nav); font-size:0.8rem; border-bottom:2px solid #222;">
+        <div class="flex-grow-1 border-bottom border-success border-3 pb-2 text-success">CHATS</div>
+        <div class="flex-grow-1">STATUS</div>
+        <div class="flex-grow-1">CALLS</div>
     </div>
     <div id="contact-list"></div>
 </div>
@@ -97,8 +102,7 @@
 <div id="chat-window">
     <div class="nav-header">
         <div class="d-flex align-items-center">
-            <button onclick="closeChat()" class="btn text-white p-0 me-3">←</button>
-            <div class="avatar me-2" id="chat-profile-pic" style="width: 35px; height: 35px; font-size: 0.9rem;"></div>
+            <button onclick="closeChat()" class="btn text-white p-0 me-3" style="font-size: 1.2rem;">←</button>
             <b id="chat-with-name"></b>
         </div>
         <button class="icon-btn" onclick="startVideoCall()">
@@ -108,22 +112,22 @@
     <div id="chat-messages"></div>
     <div class="chat-input-area">
         <input type="text" id="text-msg" placeholder="Pesan..." onkeypress="if(event.key==='Enter') sendText()">
-        <button id="vn-btn" class="icon-btn" onmousedown="startVN()" onmouseup="stopVN()">🎤</button>
-        <button onclick="sendText()" class="btn btn-success rounded-circle" style="width:45px; height:45px;">➤</button>
+        <button id="vn-btn" class="icon-btn" onmousedown="startVN()" onmouseup="stopVN()" ontouchstart="startVN()" ontouchend="stopVN()">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"></path><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"></path></svg>
+        </button>
+        <button onclick="sendText()" class="btn btn-success rounded-circle" style="width:40px; height:40px; display:flex; align-items:center; justify-content:center; padding:0;">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="white" style="transform:rotate(45deg); margin-left:3px;"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+        </button>
     </div>
 </div>
 
-<div id="video-call-overlay">
-    <video id="remote-video" class="remote-video" autoplay playsinline></video>
-    <video id="local-video" class="local-video" autoplay muted playsinline></video>
-    <div class="text-center" style="position:absolute; bottom:40px; width:100%"><button class="btn btn-danger rounded-circle p-3" onclick="endCall()">❌</button></div>
-</div>
+<audio id="notif-sound" src="https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3"></audio>
 
 <script>
     const REPO = "hamudi2012/Mj-WhatApp"; 
     const peer = new Peer();
     let myName = localStorage.getItem('mj_user'), targetPeerId, targetName, currentCall;
-    let pendingMessages = JSON.parse(localStorage.getItem('pending_msgs') || "[]");
+    let mediaRecorder, audioChunks = [];
 
     window.onload = () => {
         setTimeout(() => {
@@ -132,35 +136,22 @@
                 document.getElementById('splash-screen').style.display = 'none';
                 if (myName) { goToHome(); } else { document.getElementById('screen-login').style.display = 'flex'; }
             }, 500);
-        }, 1500);
+        }, 2000);
     };
-
-    function handleLogin() {
-        const val = document.getElementById('username-input').value.trim();
-        const key = localStorage.getItem('_mj_wa_tkn') || new URLSearchParams(window.location.search).get('key');
-        if(!val || !key) return alert("Butuh Nama & Token (Key)!");
-        localStorage.setItem('mj_user', val); localStorage.setItem('_mj_wa_tkn', key);
-        location.reload();
-    }
 
     function goToHome() { 
         document.getElementById('screen-home').style.display='flex';
         document.getElementById('my-profile-name').innerText = myName;
         renderAvatar(); fetchContacts(); setInterval(fetchContacts, 7000);
-        setInterval(processPendingMessages, 5000); 
-    }
-
-    function toggleDrawer() {
-        const d = document.getElementById('profile-drawer');
-        const o = document.getElementById('drawer-overlay');
-        d.classList.toggle('open');
-        o.style.display = d.classList.contains('open') ? 'block' : 'none';
     }
 
     function gantiPoto(input) {
         if (input.files && input.files[0]) {
             const reader = new FileReader();
-            reader.onload = e => { localStorage.setItem('mj_poto', e.target.result); renderAvatar(); };
+            reader.onload = function(e) {
+                localStorage.setItem('mj_poto', e.target.result);
+                renderAvatar();
+            };
             reader.readAsDataURL(input.files[0]);
         }
     }
@@ -173,44 +164,99 @@
             big.innerHTML = `<img src="${p}">`;
             small.innerHTML = `<img src="${p}">`;
         } else {
-            const initial = myName ? myName[0].toUpperCase() : 'M';
-            big.innerText = initial; small.innerText = initial;
+            big.innerText = myName ? myName[0].toUpperCase() : 'M';
+            small.innerText = myName ? myName[0].toUpperCase() : 'M';
         }
     }
 
-    function clearMySession() { if(confirm("Hapus akun dan data chat?")) { localStorage.clear(); location.reload(); } }
+    function toggleDrawer() {
+        document.getElementById('profile-drawer').classList.toggle('open');
+        const overlay = document.getElementById('drawer-overlay');
+        overlay.style.display = overlay.style.display === 'block' ? 'none' : 'block';
+    }
 
-    // LOGIKA CHAT & OFFLINE
+    function handleLogin() {
+        const val = document.getElementById('username-input').value.trim();
+        const key = localStorage.getItem('_mj_wa_tkn') || new URLSearchParams(window.location.search).get('key');
+        if(!val || !key) return alert("Butuh Nama & Token!");
+        localStorage.setItem('mj_user', val); localStorage.setItem('_mj_wa_tkn', key);
+        location.reload();
+    }
+
+    function clearMySession() { if(confirm("Hapus akun?")) { localStorage.clear(); location.reload(); } }
+
+    peer.on('call', call => {
+        if(confirm("Video Call Masuk! Angkat?")) {
+            navigator.mediaDevices.getUserMedia({video: true, audio: true}).then(stream => {
+                document.getElementById('video-call-overlay').style.display = 'flex';
+                document.getElementById('local-video').srcObject = stream;
+                call.answer(stream);
+                call.on('stream', rs => document.getElementById('remote-video').srcObject = rs);
+                currentCall = call;
+            });
+        }
+    });
+
+    peer.on('connection', conn => {
+        conn.on('data', data => {
+            saveMsg(data.sender, data.sender, data.val, 'him', data.type);
+            if(targetName === data.sender) appendUI(data.sender, data.val, 'him', data.type);
+            document.getElementById('notif-sound').play().catch(e=>{});
+        });
+    });
+
+    function startVideoCall() {
+        if(!targetPeerId) return alert("Kontak belum siap.");
+        navigator.mediaDevices.getUserMedia({video: true, audio: true}).then(stream => {
+            document.getElementById('video-call-overlay').style.display = 'flex';
+            document.getElementById('local-video').srcObject = stream;
+            const call = peer.call(targetPeerId, stream);
+            call.on('stream', rs => document.getElementById('remote-video').srcObject = rs);
+            currentCall = call;
+        }).catch(err => alert("Gagal akses kamera!"));
+    }
+
+    function endCall() { if(currentCall) currentCall.close(); location.reload(); }
+
+    function startVN() {
+        navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+            mediaRecorder = new MediaRecorder(stream); mediaRecorder.start();
+            audioChunks = []; document.getElementById('vn-btn').classList.add('recording');
+            mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+        }).catch(err => alert("Gagal akses mic!"));
+    }
+
+    function stopVN() {
+        if(!mediaRecorder || mediaRecorder.state === "inactive") return;
+        mediaRecorder.stop(); document.getElementById('vn-btn').classList.remove('recording');
+        mediaRecorder.onstop = () => {
+            const blob = new Blob(audioChunks, { type: 'audio/webm' });
+            const reader = new FileReader(); reader.readAsDataURL(blob);
+            reader.onloadend = () => { sendData(reader.result, 'vn'); appendUI(myName, reader.result, 'me', 'vn'); };
+        };
+    }
+
     function sendText() {
         const msg = document.getElementById('text-msg').value.trim();
         if(!msg) return;
-        const msgData = { id: Date.now(), type: 'text', sender: myName, targetId: targetPeerId, val: msg };
-        appendUI(myName, msg, 'me', 'text', true);
+        sendData(msg, 'text'); appendUI(myName, msg, 'me', 'text');
         document.getElementById('text-msg').value = "";
+    }
+
+    function sendData(val, type) {
+        saveMsg(targetName, myName, val, 'me', type);
         const conn = peer.connect(targetPeerId);
-        conn.on('open', () => { conn.send(msgData); saveMsg(targetName, myName, msg, 'me', 'text'); });
-        pendingMessages.push(msgData); localStorage.setItem('pending_msgs', JSON.stringify(pendingMessages));
+        conn.on('open', () => conn.send({ type, sender: myName, val }));
     }
 
-    function processPendingMessages() {
-        pendingMessages.forEach((msg, i) => {
-            const conn = peer.connect(msg.targetId);
-            conn.on('open', () => { 
-                conn.send(msg); saveMsg(targetName, myName, msg.val, 'me', 'text');
-                pendingMessages.splice(i, 1); localStorage.setItem('pending_msgs', JSON.stringify(pendingMessages));
-            });
-        });
-    }
-
-    function appendUI(s, t, side, type, isPending = false) {
+    function appendUI(s, t, side, type) {
         const box = document.getElementById('chat-messages');
         const div = document.createElement('div'); div.className = `msg ${side}`;
-        let content = type === 'text' ? `<div>${t}</div>` : `<audio controls src="${t}"></audio>`;
-        div.innerHTML = content + (side === 'me' ? `<div class="msg-status">${isPending ? '⏳' : '✓✓'}</div>` : "");
+        let content = type === 'text' ? `<div>${t}</div>` : `<audio controls src="${t}" style="width:180px;height:35px;"></audio>`;
+        div.innerHTML = `<small class="text-info fw-bold" style="font-size:0.7rem">${s}</small>${content}`;
         box.appendChild(div); box.scrollTop = box.scrollHeight;
     }
 
-    // KONTAK & PEER
     async function fetchContacts() {
         try {
             const res = await fetch(`https://hamudi2012.github.io/Mj-WhatApp/contacts.json?t=${Date.now()}`);
@@ -218,11 +264,14 @@
             const list = document.getElementById('contact-list'); list.innerHTML = "";
             for(let n in data) {
                 if(n === myName) continue;
-                const item = document.createElement('div');
-                item.className = "p-3 border-bottom d-flex align-items-center gap-3";
-                item.style.cursor = "pointer";
-                item.onclick = () => openChat(n, data[n]);
-                item.innerHTML = `<div class="avatar">${n[0].toUpperCase()}</div><b>${n}</b>`;
+                const item = document.createElement('div'); item.className = "p-3 border-bottom d-flex align-items-center justify-content-between";
+                item.innerHTML = `
+                    <div class="d-flex align-items-center gap-3" style="cursor:pointer" onclick="openChat('${n}', '${data[n]}')">
+                        <div class="avatar">${n[0].toUpperCase()}</div>
+                        <b>${n}</b>
+                    </div>
+                    <button class="btn btn-sm text-danger" onclick="deleteUser('${n}')">🗑️</button>
+                `;
                 list.appendChild(item);
             }
         } catch(e){}
@@ -232,8 +281,20 @@
         targetName = name; targetPeerId = id;
         document.getElementById('chat-window').style.display='flex';
         document.getElementById('chat-with-name').innerText = name;
-        document.getElementById('chat-profile-pic').innerText = name[0].toUpperCase();
         loadHistory(name);
+    }
+
+    async function deleteUser(u) {
+        if(!confirm(`Hapus ${u}?`)) return;
+        const t = localStorage.getItem('_mj_wa_tkn');
+        const r = await fetch(`https://api.github.com/repos/${REPO}/contents/contacts.json`, {headers:{'Authorization':`token ${t}`}});
+        const d = await r.json(); const c = JSON.parse(atob(d.content));
+        delete c[u];
+        await fetch(`https://api.github.com/repos/${REPO}/contents/contacts.json`, {
+            method:'PUT', headers:{'Authorization':`token ${t}`},
+            body:JSON.stringify({message:`Hapus ${u}`, content:btoa(JSON.stringify(c)), sha:d.sha})
+        });
+        fetchContacts();
     }
 
     function saveMsg(c, s, t, side, type) {
@@ -247,35 +308,7 @@
         JSON.parse(localStorage.getItem('chat_'+c) || "[]").forEach(m => appendUI(m.sender, m.text, m.side, m.type));
     }
 
-    function startVideoCall() {
-        navigator.mediaDevices.getUserMedia({video: true, audio: true}).then(stream => {
-            document.getElementById('video-call-overlay').style.display = 'flex';
-            document.getElementById('local-video').srcObject = stream;
-            const call = peer.call(targetPeerId, stream);
-            call.on('stream', rs => document.getElementById('remote-video').srcObject = rs);
-            currentCall = call;
-        });
-    }
-    function endCall() { if(currentCall) currentCall.close(); location.reload(); }
     function closeChat() { document.getElementById('chat-window').style.display='none'; }
-
-    peer.on('call', call => {
-        if(confirm("Video Call Masuk!")) {
-            navigator.mediaDevices.getUserMedia({video: true, audio: true}).then(stream => {
-                document.getElementById('video-call-overlay').style.display = 'flex';
-                document.getElementById('local-video').srcObject = stream;
-                call.answer(stream);
-                call.on('stream', rs => document.getElementById('remote-video').srcObject = rs);
-            });
-        }
-    });
-
-    peer.on('connection', conn => {
-        conn.on('data', data => {
-            saveMsg(data.sender, data.sender, data.val, 'him', data.type);
-            if(targetName === data.sender) appendUI(data.sender, data.val, 'him', data.type);
-        });
-    });
 
     async function syncContact(n, id) {
         const t = localStorage.getItem('_mj_wa_tkn');
@@ -284,7 +317,7 @@
             const d = await r.json(); const c = JSON.parse(atob(d.content)); c[n]=id;
             await fetch(`https://api.github.com/repos/${REPO}/contents/contacts.json`, {
                 method:'PUT', headers:{'Authorization':`token ${t}`},
-                body:JSON.stringify({message:"Sync", content:btoa(JSON.stringify(c)), sha:d.sha})
+                body:JSON.stringify({message:"Update ID", content:btoa(JSON.stringify(c)), sha:d.sha})
             });
         } catch(e){}
     }
