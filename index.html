@@ -17,9 +17,16 @@
         #splash-screen { position: fixed; inset: 0; background: var(--wa-bg); z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s ease; }
         .splash-logo { width: 100px; height: 100px; border-radius: 25px; margin-bottom: 20px; box-shadow: 0 0 20px rgba(0,168,132,0.3); }
 
+        /* PROFILE DRAWER */
+        #profile-drawer { position: fixed; top: 0; left: -100%; width: 85%; height: 100%; background: var(--wa-bg); z-index: 11000; transition: 0.4s; box-shadow: 5px 0 15px rgba(0,0,0,0.5); }
+        #profile-drawer.open { left: 0; }
+        .drawer-header { background: var(--wa-nav); padding: 40px 20px 20px; color: white; }
+        .drawer-item { padding: 18px 25px; display: flex; align-items: center; gap: 20px; border-bottom: 0.5px solid #222; cursor: pointer; }
+        .overlay-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 10999; display: none; }
+
         /* UI ELEMENTS */
         #screen-login, #screen-home, #chat-window { position: fixed; inset: 0; display: none; flex-direction: column; background: var(--wa-bg); }
-        .nav-header { background: var(--wa-nav); padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; height: 65px; }
+        .nav-header { background: var(--wa-nav); padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; }
         
         .icon-btn { 
             background: none; border: none; color: var(--wa-icon); cursor: pointer; 
@@ -27,20 +34,18 @@
             width: 45px; height: 45px; border-radius: 50%;
             -webkit-tap-highlight-color: transparent;
         }
-        .icon-btn:active { background: rgba(255,255,255,0.1); }
 
-        .avatar { width: 40px; height: 40px; background: var(--wa-green); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; object-fit: cover; overflow: hidden; color: white; }
+        .avatar { width: 45px; height: 45px; background: var(--wa-green); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; object-fit: cover; overflow: hidden; cursor: pointer; color: white; }
         .avatar img { width: 100%; height: 100%; object-fit: cover; }
         
         #contact-list { flex: 1; overflow-y: auto; }
         #chat-messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-blend-mode: overlay; background-color: #0b141a; }
-        
-        .msg { max-width: 80%; padding: 8px 12px; border-radius: 12px; font-size: 0.95rem; position: relative; box-shadow: 0 1px 1px rgba(0,0,0,0.2); }
+        .msg { max-width: 80%; padding: 10px; border-radius: 12px; font-size: 0.9rem; position: relative; }
         .msg.me { align-self: flex-end; background: var(--wa-msg-me); border-top-right-radius: 0; }
         .msg.him { align-self: flex-start; background: var(--wa-msg-him); border-top-left-radius: 0; }
-        .msg-status { font-size: 0.65rem; opacity: 0.6; text-align: right; margin-top: 2px; }
+        .msg-status { font-size: 0.65rem; opacity: 0.6; text-align: right; margin-top: 4px; }
 
-        .chat-input-area { background: var(--wa-nav); padding: 10px; display: flex; gap: 8px; align-items: center; }
+        .chat-input-area { background: var(--wa-nav); padding: 10px; display: flex; gap: 10px; align-items: center; }
         #text-msg { flex: 1; background: #2a3942; border: none; border-radius: 20px; padding: 10px 15px; color: white; outline: none; }
 
         #video-call-overlay { position: fixed; inset: 0; background: black; z-index: 15000; display: none; flex-direction: column; }
@@ -51,25 +56,39 @@
 <body>
 
 <div id="splash-screen">
-    <img src="https://cdn-icons-png.flaticon.com/512/124/124034.png" class="splash-logo">
+    <img src="logo-mj-whatsapp.png" class="splash-logo" onerror="this.src='https://cdn-icons-png.flaticon.com/512/124/124034.png'">
     <h4 class="fw-bold text-secondary">Mj-WhatsApp</h4>
 </div>
 
+<div id="drawer-overlay" class="overlay-bg" onclick="toggleDrawer()"></div>
+<div id="profile-drawer">
+    <div class="drawer-header text-center">
+        <div class="avatar mx-auto mb-3" id="my-avatar-big" style="width:100px; height:100px; font-size:2.5rem;" onclick="document.getElementById('poto-asli').click()">M</div>
+        <input type="file" id="poto-asli" hidden accept="image/*" onchange="gantiPoto(this)">
+        <h4 id="my-profile-name" class="fw-bold">User</h4>
+        <p class="small text-success">Klik foto untuk ganti foto asli</p>
+    </div>
+    <div class="drawer-body">
+        <div class="drawer-item"><span>🔑</span> <b>Account</b></div>
+        <div class="drawer-item" onclick="clearMySession()" style="color:#ff5c5c"><span>🚪</span> <b>Hapus Akun / Logout</b></div>
+    </div>
+</div>
+
 <div id="screen-login" class="justify-content-center p-4">
-    <div class="text-center mb-4"><h3>Masuk Mj-WA</h3></div>
-    <input type="text" id="username-input" class="form-control mb-3" placeholder="Nama lo..." style="background:#2a3942;color:white;border:none;">
-    <button class="btn btn-success w-100 fw-bold" onclick="handleLogin()">GAS CHAT!</button>
+    <div class="text-center mb-4"><img src="logo-mj-whatsapp.png" style="width:70px; border-radius:15px;" onerror="this.src='https://cdn-icons-png.flaticon.com/512/124/124034.png'"><h3 class="mt-3 fw-bold">Masuk Mj-WA</h3></div>
+    <input type="text" id="username-input" class="form-control mb-3" placeholder="Masukkan Nama Kamu..." style="background:#2a3942;color:white;border:none;">
+    <button class="btn btn-success w-100 fw-bold" onclick="handleLogin()">MULAI CHAT</button>
 </div>
 
 <div id="screen-home">
     <div class="nav-header">
         <div class="d-flex align-items-center gap-2">
-            <div class="avatar" id="my-avatar-small">M</div>
-            <b class="text-success" style="font-size: 1.2rem;">Mj-WhatsApp</b>
+            <div class="avatar" id="my-avatar-small" style="width:35px; height:35px; font-size:0.9rem;" onclick="toggleDrawer()">M</div>
+            <b class="text-success">Mj-WhatsApp</b>
         </div>
-        <div class="d-flex">
-            <button class="icon-btn">🔍</button>
-            <button class="icon-btn" onclick="clearMySession()">⋮</button>
+        <div class="d-flex gap-2">
+            <span class="icon-btn" style="width:30px">🔍</span>
+            <span class="icon-btn" style="width:30px" onclick="toggleDrawer()">⋮</span>
         </div>
     </div>
     <div id="contact-list"></div>
@@ -78,12 +97,9 @@
 <div id="chat-window">
     <div class="nav-header">
         <div class="d-flex align-items-center">
-            <button onclick="closeChat()" class="icon-btn me-1" style="color:white; width: 30px;">←</button>
+            <button onclick="closeChat()" class="btn text-white p-0 me-3">←</button>
             <div class="avatar me-2" id="chat-profile-pic" style="width: 35px; height: 35px; font-size: 0.9rem;"></div>
-            <div style="line-height: 1.2;">
-                <b id="chat-with-name"></b><br>
-                <small id="online-status" style="font-size: 0.7rem; color: var(--wa-green);">online</small>
-            </div>
+            <b id="chat-with-name"></b>
         </div>
         <button class="icon-btn" onclick="startVideoCall()">
             <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M18 7c0-1.103-.897-2-2-2H4c-1.103 0-2 .897-2 2v10c0 1.103.897 2 2 2h12c1.103 0 2-.897 2-2v-3.333L22 17V7l-4 3.333V7z"></path></svg>
@@ -92,19 +108,15 @@
     <div id="chat-messages"></div>
     <div class="chat-input-area">
         <input type="text" id="text-msg" placeholder="Pesan..." onkeypress="if(event.key==='Enter') sendText()">
-        <button id="vn-btn" class="icon-btn" onmousedown="startVN()" onmouseup="stopVN()">
-            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"></path><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"></path></svg>
-        </button>
-        <button onclick="sendText()" class="btn btn-success rounded-circle" style="width:45px; height:45px; flex-shrink: 0;">➤</button>
+        <button id="vn-btn" class="icon-btn" onmousedown="startVN()" onmouseup="stopVN()">🎤</button>
+        <button onclick="sendText()" class="btn btn-success rounded-circle" style="width:45px; height:45px;">➤</button>
     </div>
 </div>
 
 <div id="video-call-overlay">
     <video id="remote-video" class="remote-video" autoplay playsinline></video>
     <video id="local-video" class="local-video" autoplay muted playsinline></video>
-    <div style="position:absolute; bottom:40px; width:100%; text-align:center;">
-        <button class="btn btn-danger rounded-circle p-3" onclick="endCall()" style="width:60px; height:60px;">❌</button>
-    </div>
+    <div class="text-center" style="position:absolute; bottom:40px; width:100%"><button class="btn btn-danger rounded-circle p-3" onclick="endCall()">❌</button></div>
 </div>
 
 <script>
@@ -123,112 +135,82 @@
         }, 1500);
     };
 
-    function goToHome() { 
-        document.getElementById('screen-home').style.display='flex';
-        document.getElementById('my-avatar-small').innerText = myName[0].toUpperCase();
-        fetchContacts(); 
-        setInterval(fetchContacts, 7000);
-        setInterval(processPendingMessages, 5000); 
-    }
-
     function handleLogin() {
         const val = document.getElementById('username-input').value.trim();
         const key = localStorage.getItem('_mj_wa_tkn') || new URLSearchParams(window.location.search).get('key');
-        if(!val || !key) return alert("Butuh Nama & Token!");
+        if(!val || !key) return alert("Butuh Nama & Token (Key)!");
         localStorage.setItem('mj_user', val); localStorage.setItem('_mj_wa_tkn', key);
         location.reload();
     }
 
-    // PESAN OFFLINE LOGIC
+    function goToHome() { 
+        document.getElementById('screen-home').style.display='flex';
+        document.getElementById('my-profile-name').innerText = myName;
+        renderAvatar(); fetchContacts(); setInterval(fetchContacts, 7000);
+        setInterval(processPendingMessages, 5000); 
+    }
+
+    function toggleDrawer() {
+        const d = document.getElementById('profile-drawer');
+        const o = document.getElementById('drawer-overlay');
+        d.classList.toggle('open');
+        o.style.display = d.classList.contains('open') ? 'block' : 'none';
+    }
+
+    function gantiPoto(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = e => { localStorage.setItem('mj_poto', e.target.result); renderAvatar(); };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function renderAvatar() {
+        const p = localStorage.getItem('mj_poto');
+        const big = document.getElementById('my-avatar-big');
+        const small = document.getElementById('my-avatar-small');
+        if(p) {
+            big.innerHTML = `<img src="${p}">`;
+            small.innerHTML = `<img src="${p}">`;
+        } else {
+            const initial = myName ? myName[0].toUpperCase() : 'M';
+            big.innerText = initial; small.innerText = initial;
+        }
+    }
+
+    function clearMySession() { if(confirm("Hapus akun dan data chat?")) { localStorage.clear(); location.reload(); } }
+
+    // LOGIKA CHAT & OFFLINE
     function sendText() {
         const msg = document.getElementById('text-msg').value.trim();
         if(!msg) return;
-
-        const messageData = { 
-            id: Date.now(),
-            type: 'text', 
-            sender: myName, 
-            targetId: targetPeerId,
-            val: msg 
-        };
-
+        const msgData = { id: Date.now(), type: 'text', sender: myName, targetId: targetPeerId, val: msg };
         appendUI(myName, msg, 'me', 'text', true);
         document.getElementById('text-msg').value = "";
-
         const conn = peer.connect(targetPeerId);
-        conn.on('open', () => {
-            conn.send(messageData);
-            saveMsg(targetName, myName, msg, 'me', 'text');
-            // Menandai pesan terkirim di UI bisa ditambahkan di sini
-        });
-
-        saveToPending(messageData);
-    }
-
-    function saveToPending(data) {
-        pendingMessages.push(data);
-        localStorage.setItem('pending_msgs', JSON.stringify(pendingMessages));
+        conn.on('open', () => { conn.send(msgData); saveMsg(targetName, myName, msg, 'me', 'text'); });
+        pendingMessages.push(msgData); localStorage.setItem('pending_msgs', JSON.stringify(pendingMessages));
     }
 
     function processPendingMessages() {
-        if (pendingMessages.length === 0) return;
-        pendingMessages.forEach((msg, index) => {
+        pendingMessages.forEach((msg, i) => {
             const conn = peer.connect(msg.targetId);
-            conn.on('open', () => {
-                conn.send(msg);
-                saveMsg(msg.targetName || targetName, myName, msg.val, 'me', 'text');
-                pendingMessages.splice(index, 1);
-                localStorage.setItem('pending_msgs', JSON.stringify(pendingMessages));
+            conn.on('open', () => { 
+                conn.send(msg); saveMsg(targetName, myName, msg.val, 'me', 'text');
+                pendingMessages.splice(i, 1); localStorage.setItem('pending_msgs', JSON.stringify(pendingMessages));
             });
         });
     }
 
     function appendUI(s, t, side, type, isPending = false) {
         const box = document.getElementById('chat-messages');
-        const div = document.createElement('div'); 
-        div.className = `msg ${side}`;
-        
+        const div = document.createElement('div'); div.className = `msg ${side}`;
         let content = type === 'text' ? `<div>${t}</div>` : `<audio controls src="${t}"></audio>`;
-        let statusIcon = isPending ? '⏳' : '✓✓';
-        let status = side === 'me' ? `<div class="msg-status">${statusIcon}</div>` : "";
-        
-        div.innerHTML = content + status;
+        div.innerHTML = content + (side === 'me' ? `<div class="msg-status">${isPending ? '⏳' : '✓✓'}</div>` : "");
         box.appendChild(div); box.scrollTop = box.scrollHeight;
     }
 
-    // VIDEO CALL (RESPONSIF)
-    function startVideoCall() {
-        if(!targetPeerId) return alert("User Offline");
-        navigator.mediaDevices.getUserMedia({video: true, audio: true}).then(stream => {
-            document.getElementById('video-call-overlay').style.display = 'flex';
-            document.getElementById('local-video').srcObject = stream;
-            const call = peer.call(targetPeerId, stream);
-            call.on('stream', rs => document.getElementById('remote-video').srcObject = rs);
-            currentCall = call;
-        }).catch(() => alert("Izin kamera ditolak"));
-    }
-
-    function endCall() { if(currentCall) currentCall.close(); location.reload(); }
-
-    peer.on('call', call => {
-        if(confirm("Video Call Masuk! Angkat?")) {
-            navigator.mediaDevices.getUserMedia({video: true, audio: true}).then(stream => {
-                document.getElementById('video-call-overlay').style.display = 'flex';
-                document.getElementById('local-video').srcObject = stream;
-                call.answer(stream);
-                call.on('stream', rs => document.getElementById('remote-video').srcObject = rs);
-                currentCall = call;
-            });
-        }
-    });
-
-    peer.on('connection', conn => {
-        conn.on('data', data => {
-            saveMsg(data.sender, data.sender, data.val, 'him', data.type);
-            if(targetName === data.sender) appendUI(data.sender, data.val, 'him', data.type);
-        });
-    });
-
+    // KONTAK & PEER
     async function fetchContacts() {
         try {
             const res = await fetch(`https://hamudi2012.github.io/Mj-WhatApp/contacts.json?t=${Date.now()}`);
@@ -240,10 +222,7 @@
                 item.className = "p-3 border-bottom d-flex align-items-center gap-3";
                 item.style.cursor = "pointer";
                 item.onclick = () => openChat(n, data[n]);
-                item.innerHTML = `
-                    <div class="avatar">${n[0].toUpperCase()}</div>
-                    <div><b>${n}</b><br><small class="text-secondary">Pesan...</small></div>
-                `;
+                item.innerHTML = `<div class="avatar">${n[0].toUpperCase()}</div><b>${n}</b>`;
                 list.appendChild(item);
             }
         } catch(e){}
@@ -268,8 +247,35 @@
         JSON.parse(localStorage.getItem('chat_'+c) || "[]").forEach(m => appendUI(m.sender, m.text, m.side, m.type));
     }
 
+    function startVideoCall() {
+        navigator.mediaDevices.getUserMedia({video: true, audio: true}).then(stream => {
+            document.getElementById('video-call-overlay').style.display = 'flex';
+            document.getElementById('local-video').srcObject = stream;
+            const call = peer.call(targetPeerId, stream);
+            call.on('stream', rs => document.getElementById('remote-video').srcObject = rs);
+            currentCall = call;
+        });
+    }
+    function endCall() { if(currentCall) currentCall.close(); location.reload(); }
     function closeChat() { document.getElementById('chat-window').style.display='none'; }
-    function clearMySession() { localStorage.clear(); location.reload(); }
+
+    peer.on('call', call => {
+        if(confirm("Video Call Masuk!")) {
+            navigator.mediaDevices.getUserMedia({video: true, audio: true}).then(stream => {
+                document.getElementById('video-call-overlay').style.display = 'flex';
+                document.getElementById('local-video').srcObject = stream;
+                call.answer(stream);
+                call.on('stream', rs => document.getElementById('remote-video').srcObject = rs);
+            });
+        }
+    });
+
+    peer.on('connection', conn => {
+        conn.on('data', data => {
+            saveMsg(data.sender, data.sender, data.val, 'him', data.type);
+            if(targetName === data.sender) appendUI(data.sender, data.val, 'him', data.type);
+        });
+    });
 
     async function syncContact(n, id) {
         const t = localStorage.getItem('_mj_wa_tkn');
@@ -278,12 +284,12 @@
             const d = await r.json(); const c = JSON.parse(atob(d.content)); c[n]=id;
             await fetch(`https://api.github.com/repos/${REPO}/contents/contacts.json`, {
                 method:'PUT', headers:{'Authorization':`token ${t}`},
-                body:JSON.stringify({message:"Update", content:btoa(JSON.stringify(c)), sha:d.sha})
+                body:JSON.stringify({message:"Sync", content:btoa(JSON.stringify(c)), sha:d.sha})
             });
         } catch(e){}
     }
     peer.on('open', id => { if(myName) syncContact(myName, id); });
 </script>
 </body>
-    </html>
-    
+        </html>
+        
