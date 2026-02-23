@@ -130,7 +130,7 @@
     const peer = new Peer();
     let myName = localStorage.getItem('mj_user'), targetPeerId, targetName, currentCall;
     let mediaRecorder, audioChunks = [];
-    let activeConn = null;
+    let connections = {}; // Menyimpan koneksi aktif berdasarkan PeerID
 
     window.onload = () => {
         setTimeout(() => {
@@ -145,18 +145,10 @@
     function goToHome() { 
         document.getElementById('screen-home').style.display='flex';
         document.getElementById('my-profile-name').innerText = myName;
-        renderAvatar(); fetchContacts(); setInterval(fetchContacts, 7000);
-    }
-
-    function gantiPoto(input) {
-        if (input.files && input.files[0]) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                localStorage.setItem('mj_poto', e.target.result);
-                renderAvatar();
-            };
-            reader.readAsDataURL(input.files[0]);
-        }
+        renderAvatar(); 
+        fetchContacts(); 
+        // Live Refresh kontak setiap 5 detik
+        setInterval(fetchContacts, 5000);
     }
 
     function renderAvatar() {
@@ -167,43 +159,75 @@
             big.innerHTML = `<img src="${p}">`;
             small.innerHTML = `<img src="${p}">`;
         } else {
-            big.innerText = myName ? myName[0].toUpperCase() : 'M';
-            small.innerText = myName ? myName[0].toUpperCase() : 'M';
+            const initial = myName ? myName[0].toUpperCase() : 'M';
+            big.innerText = initial; small.innerText = initial;
         }
     }
 
     function toggleDrawer() {
-        document.getElementById('profile-drawer').classList.toggle('open');
+        const drawer = document.getElementById('profile-drawer');
         const overlay = document.getElementById('drawer-overlay');
-        overlay.style.display = overlay.style.display === 'block' ? 'none' : 'block';
+        drawer.classList.toggle('open');
+        overlay.style.display = drawer.classList.contains('open') ? 'block' : 'none';
     }
 
     function handleLogin() {
         const val = document.getElementById('username-input').value.trim();
         const key = localStorage.getItem('_mj_wa_tkn') || new URLSearchParams(window.location.search).get('key');
         if(!val || !key) return alert("Butuh Nama & Token!");
-        localStorage.setItem('mj_user', val); localStorage.setItem('_mj_wa_tkn', key);
+        localStorage.setItem('mj_user', val); 
+        localStorage.setItem('_mj_wa_tkn', key);
         location.reload();
     }
 
     function clearMySession() { if(confirm("Hapus akun?")) { localStorage.clear(); location.reload(); } }
 
-    // --- PEER JS EVENT HANDLERS ---
+    // --- PEER JS CORE LOGIC (LIVE CHAT) ---
     peer.on('open', id => { if(myName) syncContact(myName, id); });
 
     peer.on('connection', conn => {
-        activeConn = conn;
+        setupConnListeners(conn);
+    });
+
+    function setupConnListeners(conn) {
+        connections[conn.peer] = conn;
+        
         conn.on('data', data => {
+            // Simpan pesan ke history lokal
             saveMsg(data.sender, data.sender, data.val, 'him', data.type);
+            
+            // LIVE UPDATE: Jika sedang buka jendela chat dengan pengirim tersebut
             if(targetName === data.sender) {
                 appendUI(data.sender, data.val, 'him', data.type);
             }
             document.getElementById('notif-sound').play().catch(e=>{});
         });
-    });
 
+        conn.on('close', () => { delete connections[conn.peer]; });
+        conn.on('error', () => { delete connections[conn.peer]; });
+    }
+
+    function sendData(val, type) {
+        saveMsg(targetName, myName, val, 'me', type);
+        
+        // Cek koneksi yang sudah ada
+        let conn = connections[targetPeerId];
+        
+        if (conn && conn.open) {
+            conn.send({ type, sender: myName, val });
+        } else {
+            // Re-establish koneksi jika putus
+            conn = peer.connect(targetPeerId);
+            conn.on('open', () => {
+                setupConnListeners(conn);
+                conn.send({ type, sender: myName, val });
+            });
+        }
+    }
+
+    // --- VIDEO CALL ---
     peer.on('call', call => {
-        if(confirm("Video Call Masuk dari seseorang! Angkat?")) {
+        if(confirm("Video Call Masuk! Angkat?")) {
             navigator.mediaDevices.getUserMedia({video: true, audio: true}).then(stream => {
                 document.getElementById('video-call-overlay').style.display = 'flex';
                 document.getElementById('local-video').srcObject = stream;
@@ -215,43 +239,24 @@
     });
 
     function startVideoCall() {
-        if(!targetPeerId) return alert("Kontak belum siap.");
+        if(!targetPeerId) return alert("Kontak belum online.");
         navigator.mediaDevices.getUserMedia({video: true, audio: true}).then(stream => {
             document.getElementById('video-call-overlay').style.display = 'flex';
             document.getElementById('local-video').srcObject = stream;
             const call = peer.call(targetPeerId, stream);
-            call.on('stream', rs => {
-                document.getElementById('remote-video').srcObject = rs;
-            });
+            call.on('stream', rs => document.getElementById('remote-video').srcObject = rs);
             currentCall = call;
-        }).catch(err => alert("Gagal akses kamera/mic!"));
+        }).catch(err => alert("Izin kamera ditolak!"));
     }
 
     function endCall() { 
         if(currentCall) currentCall.close(); 
         document.getElementById('video-call-overlay').style.display = 'none';
-        const localVid = document.getElementById('local-video');
-        if(localVid.srcObject) {
-            localVid.srcObject.getTracks().forEach(track => track.stop());
-        }
+        const stream = document.getElementById('local-video').srcObject;
+        if(stream) stream.getTracks().forEach(t => t.stop());
     }
 
-    // --- MESSAGE LOGIC ---
-    function sendData(val, type) {
-        saveMsg(targetName, myName, val, 'me', type);
-        
-        // Cek koneksi aktif biar gak reconnect terus-terusan
-        if (activeConn && activeConn.peer === targetPeerId && activeConn.open) {
-            activeConn.send({ type, sender: myName, val });
-        } else {
-            const conn = peer.connect(targetPeerId);
-            conn.on('open', () => {
-                activeConn = conn;
-                conn.send({ type, sender: myName, val });
-            });
-        }
-    }
-
+    // --- UI & MESSAGING ---
     function sendText() {
         const msg = document.getElementById('text-msg').value.trim();
         if(!msg || !targetPeerId) return;
@@ -260,6 +265,102 @@
         document.getElementById('text-msg').value = "";
     }
 
+    function appendUI(s, t, side, type) {
+        const box = document.getElementById('chat-messages');
+        const div = document.createElement('div'); 
+        div.className = `msg ${side}`;
+        let content = type === 'text' ? `<div>${t}</div>` : `<audio controls src="${t}" style="width:180px;height:35px;"></audio>`;
+        div.innerHTML = `<small class="text-info fw-bold" style="font-size:0.7rem; display:block;">${s}</small>${content}`;
+        box.appendChild(div); 
+        box.scrollTop = box.scrollHeight;
+    }
+
+    function saveMsg(contactKey, s, t, side, type) {
+        let h = JSON.parse(localStorage.getItem('chat_'+contactKey) || "[]");
+        h.push({sender:s, text:t, side, type});
+        localStorage.setItem('chat_'+contactKey, JSON.stringify(h));
+    }
+
+    function loadHistory(contactKey) {
+        const box = document.getElementById('chat-messages'); 
+        box.innerHTML = "";
+        const history = JSON.parse(localStorage.getItem('chat_'+contactKey) || "[]");
+        history.forEach(m => appendUI(m.sender, m.text, m.side, m.type));
+    }
+
+    // --- CONTACT SYNC & GITHUB API ---
+    async function fetchContacts() {
+        try {
+            const res = await fetch(`https://hamudi2012.github.io/Mj-WhatApp/contacts.json?t=${Date.now()}`);
+            const data = await res.json();
+            const list = document.getElementById('contact-list');
+            
+            // Simpan posisi scroll agar tidak melompat saat refresh
+            const scrollPos = list.scrollTop;
+            list.innerHTML = "";
+            
+            for(let n in data) {
+                if(n === myName) continue;
+                const item = document.createElement('div'); 
+                item.className = "p-3 border-bottom d-flex align-items-center justify-content-between";
+                item.style.cursor = "pointer";
+                item.innerHTML = `
+                    <div class="d-flex align-items-center gap-3" style="flex:1" onclick="openChat('${n}', '${data[n]}')">
+                        <div class="avatar">${n[0].toUpperCase()}</div>
+                        <b>${n}</b>
+                    </div>
+                    <button class="btn btn-sm text-danger" onclick="deleteUser('${n}')">🗑️</button>
+                `;
+                list.appendChild(item);
+            }
+            list.scrollTop = scrollPos;
+        } catch(e){}
+    }
+
+    function openChat(name, id) {
+        targetName = name; 
+        targetPeerId = id;
+        document.getElementById('chat-window').style.display='flex';
+        document.getElementById('chat-with-name').innerText = name;
+        loadHistory(name);
+    }
+
+    function closeChat() { document.getElementById('chat-window').style.display='none'; }
+
+    async function syncContact(n, id) {
+        const t = localStorage.getItem('_mj_wa_tkn');
+        if(!t) return;
+        try {
+            const r = await fetch(`https://api.github.com/repos/${REPO}/contents/contacts.json`, {headers:{'Authorization':`token ${t}`}});
+            const d = await r.json(); 
+            const c = JSON.parse(atob(d.content)); 
+            
+            // Update jika ID berubah (biar live)
+            if(c[n] !== id) {
+                c[n] = id;
+                await fetch(`https://api.github.com/repos/${REPO}/contents/contacts.json`, {
+                    method:'PUT', headers:{'Authorization':`token ${t}`},
+                    body:JSON.stringify({message:"Update Peer ID", content:btoa(JSON.stringify(c)), sha:d.sha})
+                });
+            }
+        } catch(e){}
+    }
+
+    async function deleteUser(u) {
+        if(!confirm(`Hapus ${u}?`)) return;
+        const t = localStorage.getItem('_mj_wa_tkn');
+        const r = await fetch(`https://api.github.com/repos/${REPO}/contents/contacts.json`, {headers:{'Authorization':`token ${t}`}});
+        const d = await r.json(); 
+        const c = JSON.parse(atob(d.content));
+        delete c[u];
+        await fetch(`https://api.github.com/repos/${REPO}/contents/contacts.json`, {
+            method:'PUT', headers:{'Authorization':`token ${t}`},
+            body:JSON.stringify({message:`Hapus ${u}`, content:btoa(JSON.stringify(c)), sha:d.sha})
+        });
+        fetchContacts();
+    }
+
+    // --- VOICE NOTE LOGIC ---
     function startVN() {
         navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
             mediaRecorder = new MediaRecorder(stream); mediaRecorder.start();
@@ -281,80 +382,15 @@
         };
     }
 
-    function appendUI(s, t, side, type) {
-        const box = document.getElementById('chat-messages');
-        const div = document.createElement('div'); div.className = `msg ${side}`;
-        let content = type === 'text' ? `<div>${t}</div>` : `<audio controls src="${t}" style="width:180px;height:35px;"></audio>`;
-        div.innerHTML = `<small class="text-info fw-bold" style="font-size:0.7rem; display:block; margin-bottom:2px;">${s}</small>${content}`;
-        box.appendChild(div); box.scrollTop = box.scrollHeight;
-    }
-
-    function saveMsg(contactKey, s, t, side, type) {
-        let h = JSON.parse(localStorage.getItem('chat_'+contactKey) || "[]");
-        h.push({sender:s, text:t, side, type});
-        localStorage.setItem('chat_'+contactKey, JSON.stringify(h));
-    }
-
-    function loadHistory(contactKey) {
-        const box = document.getElementById('chat-messages'); box.innerHTML = "";
-        JSON.parse(localStorage.getItem('chat_'+contactKey) || "[]").forEach(m => appendUI(m.sender, m.text, m.side, m.type));
-    }
-
-    // --- CONTACTS & SYNC ---
-    async function fetchContacts() {
-        try {
-            const res = await fetch(`https://hamudi2012.github.io/Mj-WhatApp/contacts.json?t=${Date.now()}`);
-            const data = await res.json();
-            const list = document.getElementById('contact-list'); list.innerHTML = "";
-            for(let n in data) {
-                if(n === myName) continue;
-                const item = document.createElement('div'); item.className = "p-3 border-bottom d-flex align-items-center justify-content-between";
-                item.innerHTML = `
-                    <div class="d-flex align-items-center gap-3" style="cursor:pointer; flex:1" onclick="openChat('${n}', '${data[n]}')">
-                        <div class="avatar">${n[0].toUpperCase()}</div>
-                        <b>${n}</b>
-                    </div>
-                    <button class="btn btn-sm text-danger" onclick="deleteUser('${n}')">🗑️</button>
-                `;
-                list.appendChild(item);
-            }
-        } catch(e){}
-    }
-
-    function openChat(name, id) {
-        targetName = name; targetPeerId = id;
-        document.getElementById('chat-window').style.display='flex';
-        document.getElementById('chat-with-name').innerText = name;
-        loadHistory(name);
-    }
-
-    function closeChat() { document.getElementById('chat-window').style.display='none'; }
-
-    async function syncContact(n, id) {
-        const t = localStorage.getItem('_mj_wa_tkn');
-        if(!t) return;
-        try {
-            const r = await fetch(`https://api.github.com/repos/${REPO}/contents/contacts.json`, {headers:{'Authorization':`token ${t}`}});
-            const d = await r.json(); const c = JSON.parse(atob(d.content)); 
-            c[n]=id;
-            await fetch(`https://api.github.com/repos/${REPO}/contents/contacts.json`, {
-                method:'PUT', headers:{'Authorization':`token ${t}`},
-                body:JSON.stringify({message:"Update ID", content:btoa(JSON.stringify(c)), sha:d.sha})
-            });
-        } catch(e){}
-    }
-
-    async function deleteUser(u) {
-        if(!confirm(`Hapus ${u}?`)) return;
-        const t = localStorage.getItem('_mj_wa_tkn');
-        const r = await fetch(`https://api.github.com/repos/${REPO}/contents/contacts.json`, {headers:{'Authorization':`token ${t}`}});
-        const d = await r.json(); const c = JSON.parse(atob(d.content));
-        delete c[u];
-        await fetch(`https://api.github.com/repos/${REPO}/contents/contacts.json`, {
-            method:'PUT', headers:{'Authorization':`token ${t}`},
-            body:JSON.stringify({message:`Hapus ${u}`, content:btoa(JSON.stringify(c)), sha:d.sha})
-        });
-        fetchContacts();
+    function gantiPoto(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                localStorage.setItem('mj_poto', e.target.result);
+                renderAvatar();
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
     }
 </script>
 </body>
