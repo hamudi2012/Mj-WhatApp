@@ -6,84 +6,172 @@
     <title>Mj-WhatsApp Pro</title>
     <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    
     <style>
-        :root { --wa-dark: #0b141a; --wa-nav: #202c33; --wa-green: #00a884; --wa-bg: #0d1418; --wa-msg: #005c4b; }
-        body { background: var(--wa-dark); color: #e9edef; font-family: sans-serif; height: 100dvh; margin: 0; overflow: hidden; }
-        
-        /* LAYAR LOGIN */
-        #screen-login { position: fixed; inset: 0; background: var(--wa-dark); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; transition: 0.5s; }
-        
-        /* LAYAR HOME & CHAT */
-        #screen-home { display: none; height: 100%; flex-direction: column; opacity: 0; transition: 0.5s; }
-        .header { background: var(--wa-nav); padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; }
-        
-        /* DAFTAR KONTAK */
-        #contact-list { flex: 1; overflow-y: auto; padding: 10px; background-color: var(--wa-bg); }
-        .contact-item { background: var(--wa-nav); padding: 12px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #333; cursor: pointer; }
-        .contact-info b { color: var(--wa-green); }
-        .contact-info p { margin: 0; font-size: 0.7rem; color: #00e676; }
+        :root { 
+            --wa-dark: #0b141a; 
+            --wa-nav: #202c33; 
+            --wa-green: #00a884; 
+            --wa-bg: #0b141a; 
+            --wa-msg-me: #005c4b; 
+            --wa-msg-him: #202c33;
+            --wa-text: #e9edef;
+            --wa-muted: #8696a0;
+        }
 
-        /* AREA CHAT (POPUP) */
-        #chat-window { position: fixed; inset: 0; background: var(--wa-bg); z-index: 2000; display: none; flex-direction: column; }
-        #chat-messages { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 8px; }
-        .msg { max-width: 80%; padding: 8px 12px; border-radius: 10px; font-size: 0.9rem; position: relative; }
-        .msg.me { align-self: flex-end; background: var(--wa-msg); }
-        .msg.him { align-self: flex-start; background: var(--wa-nav); }
+        body { 
+            background: var(--wa-dark); 
+            color: var(--wa-text); 
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            height: 100dvh; 
+            margin: 0; 
+            overflow: hidden; 
+        }
+
+        /* LAYAR LOGIN */
+        #screen-login { 
+            position: fixed; inset: 0; 
+            background: var(--wa-dark); 
+            z-index: 9999; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            padding: 30px; 
+        }
+        .wa-logo-big { font-size: 80px; color: #25D366; margin-bottom: 20px; }
+
+        /* HEADER */
+        .header { 
+            background: var(--wa-nav); 
+            padding: 10px 16px; 
+            display: flex; justify-content: space-between; align-items: center; 
+            height: 60px;
+        }
+        .header-left { display: flex; align-items: center; gap: 10px; }
+        .profile-pic { width: 40px; height: 40px; border-radius: 50%; background: #6a7175; display: flex; align-items: center; justify-content: center; }
+
+        /* CHAT LIST */
+        #screen-home { display: none; height: 100%; flex-direction: column; }
+        #contact-list { flex: 1; overflow-y: auto; background-color: var(--wa-bg); }
+        .contact-item { 
+            display: flex; align-items: center; padding: 12px 16px; 
+            border-bottom: 1px solid #222d34; cursor: pointer; transition: 0.3s;
+        }
+        .contact-item:active { background: #2a3942; }
+        .contact-info { flex: 1; margin-left: 15px; }
+        .contact-info b { display: block; font-size: 1rem; }
+        .contact-info p { margin: 0; font-size: 0.85rem; color: var(--wa-muted); }
+
+        /* CHAT WINDOW */
+        #chat-window { 
+            position: fixed; inset: 0; 
+            background: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); 
+            background-color: #0b141a;
+            z-index: 2000; display: none; flex-direction: column; 
+        }
+        #chat-messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 4px; }
         
-        /* INPUT BAWAH */
-        .chat-input-area { background: var(--wa-nav); padding: 10px; display: flex; gap: 8px; align-items: center; }
-        .chat-input-area input { flex: 1; background: #2a3942; border: none; color: white; border-radius: 20px; padding: 8px 15px; }
-        .btn-round { width: 40px; height: 40px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; color: white; }
+        /* BUBBLE CHAT */
+        .msg { 
+            max-width: 85%; padding: 6px 10px; border-radius: 8px; font-size: 0.95rem; 
+            position: relative; box-shadow: 0 1px 1px rgba(0,0,0,0.2); 
+            margin-bottom: 2px;
+        }
+        .msg.me { align-self: flex-end; background: var(--wa-msg-me); border-top-right-radius: 0; }
+        .msg.him { align-self: flex-start; background: var(--wa-msg-him); border-top-left-radius: 0; }
+        .msg-time { font-size: 0.65rem; color: rgba(255,255,255,0.5); text-align: right; margin-top: 4px; }
+
+        /* INPUT AREA */
+        .chat-input-area { background: var(--wa-nav); padding: 10px; display: flex; gap: 10px; align-items: center; }
+        .input-wrapper { 
+            flex: 1; background: #2a3942; border-radius: 25px; 
+            padding: 5px 15px; display: flex; align-items: center; 
+        }
+        .input-wrapper input { 
+            flex: 1; background: transparent; border: none; color: white; 
+            padding: 8px 0; outline: none; font-size: 0.95rem;
+        }
+        .btn-round { 
+            width: 45px; height: 45px; border-radius: 50%; border: none; 
+            display: flex; align-items: center; justify-content: center; color: white; transition: 0.2s;
+        }
         .btn-send { background: var(--wa-green); }
-        .btn-voice { background: #536162; }
+        .btn-voice { background: var(--wa-green); }
 
         /* VIDEO CALL */
         #screen-video { position: fixed; inset: 0; background: #000; z-index: 5000; display: none; }
         #remote-video { width: 100%; height: 100%; object-fit: cover; }
-        #local-video { width: 90px; height: 130px; position: absolute; top: 20px; right: 20px; border-radius: 10px; border: 2px solid var(--wa-green); object-fit: cover; }
-        .btn-hangup { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); background: #ff3b30; border: none; width: 60px; height: 60px; border-radius: 50%; color: white; font-size: 1.5rem; }
+        #local-video { width: 100px; height: 150px; position: absolute; top: 20px; right: 20px; border-radius: 12px; border: 1px solid #444; object-fit: cover; }
+        .btn-hangup { 
+            position: fixed; bottom: 50px; left: 50%; transform: translateX(-50%); 
+            background: #ff3b30; border: none; width: 65px; height: 65px; 
+            border-radius: 50%; color: white; font-size: 2rem; 
+        }
 
-        .fade-in { opacity: 1 !important; display: flex !important; }
-        .fade-out { opacity: 0 !important; pointer-events: none; }
+        .fade-in { display: flex !important; animation: fadeIn 0.3s forwards; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .icon { font-family: 'Material Symbols Outlined'; font-size: 24px; cursor: pointer; user-select: none; }
     </style>
 </head>
 <body>
 
 <div id="screen-login">
-    <div style="font-size: 3rem;">🟢</div>
-    <h3 style="color: var(--wa-green); font-weight: bold;">Mj-WhatsApp</h3>
-    <div class="w-100" style="max-width: 280px;">
-        <input type="text" id="username-input" class="form-control mb-3 text-center" placeholder="Nama Kamu..." style="background: #2a3942; border: none; color: white; border-radius: 10px;">
-        <button class="btn btn-success w-100" onclick="handleLogin()" style="border-radius: 10px; font-weight: bold;">MASUK</button>
+    <div class="wa-logo-big"><span class="icon" style="font-size: 100px;">chat</span></div>
+    <h2 style="color: white; margin-bottom: 20px;">Mj-WhatsApp</h2>
+    <div class="w-100" style="max-width: 300px;">
+        <input type="text" id="username-input" class="form-control mb-3 text-center" placeholder="Nama Anda" style="background: #2a3942; border: none; color: white; height: 50px; border-radius: 15px;">
+        <button class="btn btn-success w-100" onclick="handleLogin()" style="background: var(--wa-green); border: none; height: 50px; border-radius: 15px; font-weight: bold;">LANJUT</button>
     </div>
 </div>
 
 <div id="screen-home">
     <div class="header">
-        <b>Mj-WhatsApp</b>
-        <small id="my-name-tag" style="color: var(--wa-green);"></small>
+        <div class="header-left">
+            <h4 style="margin:0; color: var(--wa-muted);">Mj-WhatsApp</h4>
+        </div>
+        <div class="header-left" style="gap: 20px;">
+            <span class="icon">search</span>
+            <span class="icon">more_vert</span>
+        </div>
     </div>
     <div id="contact-list"></div>
 </div>
 
 <div id="chat-window">
     <div class="header">
-        <button onclick="closeChat()" style="background:none; border:none; color:white; font-size:1.2rem;">←</button>
-        <b id="chat-with-name">Nama Teman</b>
-        <button onclick="startCall(targetPeerId)" style="background:none; border:none; color:var(--wa-green); font-size:1.2rem;">📞</button>
+        <div class="header-left">
+            <span class="icon" onclick="closeChat()">arrow_back</span>
+            <div class="profile-pic"><span class="icon">person</span></div>
+            <div>
+                <b id="chat-with-name">Nama Teman</b>
+                <p style="margin:0; font-size: 0.7rem; color: var(--wa-green);">Online</p>
+            </div>
+        </div>
+        <div class="header-left" style="gap: 20px;">
+            <span class="icon" onclick="startCall(targetPeerId)">videocam</span>
+            <span class="icon">call</span>
+            <span class="icon">more_vert</span>
+        </div>
     </div>
     <div id="chat-messages"></div>
     <div class="chat-input-area">
-        <input type="text" id="text-msg" placeholder="Ketik pesan...">
-        <button class="btn-round btn-voice" id="voice-btn" onmousedown="startRecord()" onmouseup="stopRecord()" ontouchstart="startRecord()" ontouchend="stopRecord()">🎤</button>
-        <button class="btn-round btn-send" onclick="sendText()">➤</button>
+        <div class="input-wrapper">
+            <span class="icon" style="color: var(--wa-muted); margin-right: 10px;">mood</span>
+            <input type="text" id="text-msg" placeholder="Ketik pesan...">
+            <span class="icon" style="color: var(--wa-muted); margin-left: 10px;">attach_file</span>
+        </div>
+        <button class="btn-round btn-voice" id="voice-btn" onmousedown="startRecord()" onmouseup="stopRecord()" ontouchstart="startRecord()" ontouchend="stopRecord()">
+            <span class="icon" id="mic-icon">mic</span>
+        </button>
+        <button class="btn-round btn-send" id="btn-send-ui" onclick="sendText()" style="display: none;">
+            <span class="icon">send</span>
+        </button>
     </div>
 </div>
 
 <div id="screen-video">
     <video id="local-video" autoplay muted playsinline></video>
     <video id="remote-video" autoplay playsinline></video>
-    <button class="btn-hangup" onclick="endCall()">×</button>
+    <button class="btn-hangup" onclick="endCall()"><span class="icon" style="font-size: 35px;">call_end</span></button>
 </div>
 
 <script>
@@ -91,19 +179,31 @@
     const peer = new Peer();
     let myName = localStorage.getItem('mj_user');
     let targetPeerId, mediaRecorder, audioChunks = [], lastData = "";
+    let activeConnection = null;
 
-    // TOKEN HANDLING
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('key')) localStorage.setItem('_mj_wa_tkn', urlParams.get('key'));
 
     window.onload = () => { if (myName) goToHome(); };
 
+    // Update UI tombol kirim otomatis
+    document.getElementById('text-msg').addEventListener('input', (e) => {
+        const sendBtn = document.getElementById('btn-send-ui');
+        const micBtn = document.getElementById('voice-btn');
+        if(e.target.value.trim().length > 0) {
+            sendBtn.style.display = 'flex';
+            micBtn.style.display = 'none';
+        } else {
+            sendBtn.style.display = 'none';
+            micBtn.style.display = 'flex';
+        }
+    });
+
     function goToHome() {
-        document.getElementById('screen-login').classList.add('fade-out');
+        document.getElementById('screen-login').style.display = 'none';
         document.getElementById('screen-home').classList.add('fade-in');
-        document.getElementById('my-name-tag').innerText = myName;
         fetchContacts();
-        setInterval(fetchContacts, 4000);
+        setInterval(fetchContacts, 5000);
     }
 
     async function handleLogin() {
@@ -149,24 +249,34 @@
                 const div = document.createElement('div');
                 div.className = "contact-item";
                 div.onclick = () => openChat(name, contacts[name]);
-                div.innerHTML = `<div class="contact-info"><b>${name}</b><p>● Online</p></div><span>💬</span>`;
+                div.innerHTML = `
+                    <div class="profile-pic"><span class="icon">person</span></div>
+                    <div class="contact-info">
+                        <b>${name}</b>
+                        <p>Ketuk untuk mengirim pesan</p>
+                    </div>
+                    <span style="color: var(--wa-muted); font-size: 0.7rem;">Online</span>
+                `;
                 list.appendChild(div);
             }
         } catch(e) {}
     }
 
-    // CHAT & VOICE LOGIC
     function openChat(name, id) {
         targetPeerId = id;
         document.getElementById('chat-with-name').innerText = name;
         document.getElementById('chat-window').style.display = 'flex';
         document.getElementById('chat-messages').innerHTML = "";
+        
+        // Inisialisasi koneksi data agar lebih cepat saat kirim
+        activeConnection = peer.connect(id);
     }
 
     function closeChat() { document.getElementById('chat-window').style.display = 'none'; }
 
-    // PeerJS Data Connection (Untuk Chat & Suara)
+    // RECEIVE DATA
     peer.on('connection', conn => {
+        activeConnection = conn;
         conn.on('data', data => {
             if (data.type === 'text') appendMsg(data.sender, data.val, 'him');
             if (data.type === 'voice') appendVoice(data.sender, data.val, 'him');
@@ -175,20 +285,43 @@
 
     function sendText() {
         const val = document.getElementById('text-msg').value;
-        if (!val) return;
-        const conn = peer.connect(targetPeerId);
-        conn.on('open', () => {
-            conn.send({ type: 'text', sender: myName, val: val });
+        if (!val || !targetPeerId) return;
+
+        // Pastikan koneksi ready
+        if (!activeConnection || activeConnection.peer !== targetPeerId) {
+            activeConnection = peer.connect(targetPeerId);
+        }
+
+        const data = { type: 'text', sender: myName, val: val };
+        
+        // Coba kirim langsung, kalau gagal tunggu event 'open'
+        if (activeConnection.open) {
+            activeConnection.send(data);
             appendMsg(myName, val, 'me');
             document.getElementById('text-msg').value = "";
-        });
+            document.getElementById('text-msg').dispatchEvent(new Event('input'));
+        } else {
+            activeConnection.on('open', () => {
+                activeConnection.send(data);
+                appendMsg(myName, val, 'me');
+                document.getElementById('text-msg').value = "";
+                document.getElementById('text-msg').dispatchEvent(new Event('input'));
+            });
+        }
     }
 
     function appendMsg(sender, text, side) {
         const div = document.createElement('div');
         div.className = `msg ${side}`;
-        div.innerHTML = `<small style="font-size:0.6rem;display:block;color:#888">${sender}</small>${text}`;
-        document.getElementById('chat-messages').appendChild(div);
+        const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        div.innerHTML = `
+            <div style="font-weight:bold; font-size: 0.7rem; margin-bottom: 2px; color: #ffbc38">${side === 'me' ? 'Anda' : sender}</div>
+            ${text}
+            <div class="msg-time">${time}</div>
+        `;
+        const container = document.getElementById('chat-messages');
+        container.appendChild(div);
+        container.scrollTop = container.scrollHeight;
     }
 
     // VOICE RECORDING
@@ -197,6 +330,7 @@
             mediaRecorder = new MediaRecorder(stream);
             mediaRecorder.start();
             audioChunks = [];
+            document.getElementById('mic-icon').innerText = 'settings_voice';
             document.getElementById('voice-btn').style.background = 'red';
             mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
         });
@@ -205,18 +339,18 @@
     function stopRecord() {
         if (!mediaRecorder) return;
         mediaRecorder.stop();
-        document.getElementById('voice-btn').style.background = '#536162';
+        document.getElementById('mic-icon').innerText = 'mic';
+        document.getElementById('voice-btn').style.background = 'var(--wa-green)';
         mediaRecorder.onstop = () => {
             const blob = new Blob(audioChunks, { type: 'audio/webm' });
             const reader = new FileReader();
             reader.readAsDataURL(blob);
             reader.onloadend = () => {
                 const base64data = reader.result;
-                const conn = peer.connect(targetPeerId);
-                conn.on('open', () => {
-                    conn.send({ type: 'voice', sender: myName, val: base64data });
+                if (activeConnection && activeConnection.open) {
+                    activeConnection.send({ type: 'voice', sender: myName, val: base64data });
                     appendVoice(myName, base64data, 'me');
-                });
+                }
             };
         };
     }
@@ -224,11 +358,16 @@
     function appendVoice(sender, base64, side) {
         const div = document.createElement('div');
         div.className = `msg ${side}`;
-        div.innerHTML = `<small style="font-size:0.6rem;color:#888">${sender}</small><audio src="${base64}" controls style="width:180px;height:30px;"></audio>`;
-        document.getElementById('chat-messages').appendChild(div);
+        div.innerHTML = `
+            <small style="font-size:0.6rem;color:#888">${sender}</small>
+            <audio src="${base64}" controls style="width:200px; height: 35px;"></audio>
+        `;
+        const container = document.getElementById('chat-messages');
+        container.appendChild(div);
+        container.scrollTop = container.scrollHeight;
     }
 
-    // VIDEO CALL (Sama seperti sebelumnya)
+    // VIDEO CALL
     function startCall(tid) {
         navigator.mediaDevices.getUserMedia({video: true, audio: true}).then(stream => {
             document.getElementById('local-video').srcObject = stream;
@@ -252,5 +391,4 @@
     function endCall() { location.reload(); }
 </script>
 </body>
-    </html>
-            
+</html>
