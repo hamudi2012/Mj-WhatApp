@@ -2,31 +2,32 @@ name: Build Mj-WhatsApp APK
 on:
   push:
     branches:
-      - main  # Setiap lo push kodingan ke branch main, APK otomatis dibuat
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Source Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4 # Update ke v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4 # Update ke v4
         with:
-          node-version: 18
+          node-version: 20
 
-      # Robot ini bakal ngebungkus web lo pake tools Bubblewrap (TWA)
       - name: Install Bubblewrap CLI
         run: npm install -g @bubblewrap/cli
 
-      # Tahap ini bakal nge-generate file APK asli Android
       - name: Build APK
+        # Ditambahkan perintah inisialisasi agar robot tidak bingung
         run: |
-          bubblewrap build --accept_toast_permissions
-          
+          bubblewrap init --manifest=manifest.json --no-interactive
+          bubblewrap build --skipSigning
+
       - name: Upload APK Result
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4 # Update ke v4 (Ini yang bikin error tadi)
         with:
           name: Mj-WhatsApp-Release
           path: ./*.apk
+          
