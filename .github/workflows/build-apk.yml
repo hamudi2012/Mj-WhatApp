@@ -8,26 +8,26 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Source Code
-        uses: actions/checkout@v4 # Update ke v4 terbaru
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4 # Update ke v4 terbaru
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - name: Install Bubblewrap CLI
-        run: npm install -g @bubblewrap/cli
+      - name: Install Tools
+        run: npm install @capacitor/core @capacitor/cli @capacitor/android
 
-      - name: Build APK (Sistem Otomatis)
+      - name: Build Web
         run: |
-          # Perintah ini buat robotnya ngerakit APK tanpa nanya-nanya lagi
-          bubblewrap init --manifest=manifest.json --no-interactive || true
-          bubblewrap build --skipSigning --no-interactive
+          mkdir -p www
+          cp index.html www/
+          # Jika ada manifest, copy juga
+          [ -f manifest.json ] && cp manifest.json www/ || echo "no manifest"
 
-      - name: Upload APK Result
-        uses: actions/upload-artifact@v4 # WAJIB v4 biar gak error 5 detik
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4 # Update ke V4
         with:
-          name: Mj-WhatsApp-Release
-          path: ./*.apk
-          
+          name: Mj-WhatsApp-Web-Files
+          path: www/
