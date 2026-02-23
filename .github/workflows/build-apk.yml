@@ -9,24 +9,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Source Code
-        uses: actions/checkout@v4 # Update ke v4
+        uses: actions/checkout@v4 # Update ke v4 terbaru
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4 # Update ke v4
+        uses: actions/setup-node@v4 # Update ke v4 terbaru
         with:
           node-version: 20
 
       - name: Install Bubblewrap CLI
         run: npm install -g @bubblewrap/cli
 
-      - name: Build APK
-        # Ditambahkan perintah inisialisasi agar robot tidak bingung
+      - name: Build APK (Sistem Otomatis)
         run: |
-          bubblewrap init --manifest=manifest.json --no-interactive
-          bubblewrap build --skipSigning
+          # Perintah ini buat robotnya ngerakit APK tanpa nanya-nanya lagi
+          bubblewrap init --manifest=manifest.json --no-interactive || true
+          bubblewrap build --skipSigning --no-interactive
 
       - name: Upload APK Result
-        uses: actions/upload-artifact@v4 # Update ke v4 (Ini yang bikin error tadi)
+        uses: actions/upload-artifact@v4 # WAJIB v4 biar gak error 5 detik
         with:
           name: Mj-WhatsApp-Release
           path: ./*.apk
