@@ -18,36 +18,39 @@
         .splash-logo { width: 100px; height: 100px; border-radius: 25px; margin-bottom: 20px; box-shadow: 0 0 20px rgba(0,168,132,0.3); }
 
         /* LOGIN SCREEN */
-        #screen-login { position: fixed; inset: 0; background: var(--wa-bg); z-index: 9000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; }
+        #screen-login { position: fixed; inset: 0; background: var(--wa-bg); z-index: 9000; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 30px; }
         .login-card { background: var(--wa-nav); padding: 40px 25px; border-radius: 20px; width: 100%; max-width: 350px; text-align: center; }
         .login-logo { width: 80px; height: 80px; border-radius: 18px; margin-bottom: 15px; }
+
+        /* PROFILE DRAWER (Slide dari Kiri) */
+        #profile-drawer { position: fixed; top: 0; left: -100%; width: 85%; height: 100%; background: var(--wa-bg); z-index: 11000; transition: 0.4s; box-shadow: 5px 0 15px rgba(0,0,0,0.5); }
+        #profile-drawer.open { left: 0; }
+        .drawer-header { background: var(--wa-nav); padding: 50px 20px 20px; color: white; display: flex; flex-direction: column; align-items: center; }
+        .drawer-item { padding: 18px 25px; display: flex; align-items: center; gap: 20px; cursor: pointer; border-bottom: 1px solid #222; }
 
         /* UI ELEMENTS */
         #screen-home, #chat-window { position: fixed; inset: 0; display: none; flex-direction: column; background: var(--wa-bg); }
         .nav-header { background: var(--wa-nav); padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; height: 62px; }
         
-        .avatar { width: 40px; height: 40px; background: var(--wa-green); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; overflow: hidden; color: white; }
+        .avatar { width: 40px; height: 40px; background: var(--wa-green); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; overflow: hidden; color: white; cursor: pointer; }
         .avatar img { width: 100%; height: 100%; object-fit: cover; }
 
         #chat-messages { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 8px; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-color: #0b141a; background-blend-mode: overlay; }
         
-        .msg { max-width: 85%; padding: 8px 12px; border-radius: 10px; font-size: 0.95rem; position: relative; }
+        .msg { max-width: 85%; padding: 8px 12px; border-radius: 10px; font-size: 0.95rem; }
         .msg.me { align-self: flex-end; background: var(--wa-msg-me); border-top-right-radius: 0; }
         .msg.him { align-self: flex-start; background: var(--wa-msg-him); border-top-left-radius: 0; }
 
         .chat-input-area { background: var(--wa-nav); padding: 8px 12px; display: flex; gap: 10px; align-items: center; }
         #text-msg { flex: 1; background: #2a3942; border: none; border-radius: 20px; padding: 9px 15px; color: white; outline: none; }
 
-        /* VIDEO CALL OVERLAY & LOUDSPEAKER STYLE */
-        #video-call-overlay { position: fixed; inset: 0; background: #075e54; z-index: 15000; display: none; flex-direction: column; align-items: center; justify-content: center; }
-        .remote-video-container { width: 100%; height: 100%; position: relative; background: #000; }
+        /* VIDEO CALL OVERLAY */
+        #video-call-overlay { position: fixed; inset: 0; background: #000; z-index: 15000; display: none; }
         #remote-video { width: 100%; height: 100%; object-fit: cover; }
-        #local-video { width: 100px; height: 150px; position: absolute; top: 20px; right: 20px; border-radius: 8px; border: 2px solid white; object-fit: cover; z-index: 15001; }
-        
-        .call-btn { background: none; border: none; color: white; cursor: pointer; padding: 10px; transition: 0.2s; }
-        .call-btn:active { transform: scale(0.9); opacity: 0.7; }
+        #local-video { width: 100px; height: 150px; position: absolute; top: 20px; right: 20px; border-radius: 10px; border: 2px solid white; object-fit: cover; }
 
-        .btn-action { color: var(--wa-icon); border: none; background: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .btn-action { color: var(--wa-icon); border: none; background: none; cursor: pointer; }
+        .overlay-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 10999; display: none; }
     </style>
 </head>
 <body>
@@ -60,21 +63,37 @@
 <div id="screen-login">
     <div class="login-card">
         <img src="logo-mj-whatsapp.png" class="login-logo" onerror="this.src='https://cdn-icons-png.flaticon.com/512/124/124034.png'">
-        <h4 class="fw-bold mb-4">Mj-WhatsApp</h4>
-        <input type="text" id="username-input" class="form-control mb-3 text-center" placeholder="Masukkan Nama Kamu..." style="background:#111b21; color:white; border:1px solid #333;">
-        <button class="btn btn-success w-100 fw-bold py-2" onclick="handleLogin()">GAS CHAT!</button>
+        <h3 class="fw-bold text-white mb-2">Mj-WhatsApp</h3>
+        <p class="text-secondary mb-4">Silakan isi nama untuk memulai</p>
+        <input type="text" id="username-input" class="form-control mb-3 text-center" placeholder="Nama Kamu..." style="background:#111b21; color:white; border:1px solid #333;">
+        <button class="btn btn-success w-100 fw-bold py-2" onclick="handleLogin()">MULAI</button>
+    </div>
+</div>
+
+<div id="drawer-overlay" class="overlay-bg" onclick="toggleDrawer()"></div>
+<div id="profile-drawer">
+    <div class="drawer-header">
+        <div class="avatar mb-3" id="my-avatar-big" style="width:120px; height:120px; font-size:3rem;" onclick="document.getElementById('input-foto').click()">M</div>
+        <input type="file" id="input-foto" hidden accept="image/*" onchange="uploadFoto(this)">
+        <h4 id="display-my-name" class="fw-bold text-white">Username</h4>
+        <small class="text-success">Klik foto untuk ubah</small>
+    </div>
+    <div class="drawer-body">
+        <div class="drawer-item" onclick="hapusUsername()" style="color:#ff5c5c">
+            <span>🗑️</span> <b>Hapus Username / Logout</b>
+        </div>
     </div>
 </div>
 
 <div id="screen-home">
     <div class="nav-header">
         <div class="d-flex align-items-center gap-2">
-            <div class="avatar" id="my-avatar-small" style="width:35px; height:35px; font-size:0.9rem;">M</div>
-            <b class="text-success">Mj-WhatsApp</b>
+            <div class="avatar" id="my-avatar-small" style="width:35px; height:35px; font-size:0.9rem;" onclick="toggleDrawer()">M</div>
+            <b class="text-success" style="font-size: 1.2rem;">Mj-WhatsApp</b>
         </div>
         <div class="d-flex gap-2">
             <button class="btn-action">🔍</button>
-            <button class="btn-action" onclick="clearMySession()">⋮</button>
+            <button class="btn-action" onclick="toggleDrawer()">⋮</button>
         </div>
     </div>
     <div id="contact-list" class="flex-grow-1 overflow-auto"></div>
@@ -84,12 +103,12 @@
     <div class="nav-header">
         <div class="d-flex align-items-center">
             <button onclick="closeChat()" class="btn text-white p-0 me-3">←</button>
-            <div class="avatar me-2" id="chat-profile-pic" style="width: 35px; height: 35px; font-size: 0.8rem;"></div>
+            <div class="avatar me-2" id="chat-profile-pic" style="width: 38px; height: 38px; font-size: 0.9rem;"></div>
             <b id="chat-with-name"></b>
         </div>
-        <button class="call-btn" onclick="startVideoCall()" id="vcall-btn" style="padding: 5px;">
+        <button class="btn-action" onclick="startVideoCall()" style="margin-left: auto; padding: 10px;">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
-                <path d="M17.394 5.035c-.57-.015-1.16.195-1.57.636l-3.324 3.324a.5.5 0 01-.707 0L8.47 5.671a1.501 1.501 0 00-2.122 0l-1.314 1.314a1.501 1.501 0 000 2.122l3.324 3.324a.5.5 0 010 .707l-3.324 3.324a1.501 1.501 0 000 2.122l1.314 1.314a1.501 1.501 0 002.122 0l3.324-3.324a.5.5 0 01.707 0l3.324 3.324a1.501 1.501 0 002.122 0l1.314-1.314a1.501 1.501 0 000-2.122l-3.324-3.324a.5.5 0 010-.707l3.324-3.324a1.501 1.501 0 000-2.122l-1.314-1.314c-.32-.32-.73-.48-1.15-.494zM19 14.5v3.5a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2h12a2 2 0 012 2v3.5l4-3v11l-4-3z"/>
+                <path d="M19 4.5H5C3.61929 4.5 2.5 5.61929 2.5 7V17C2.5 18.3807 3.61929 19.5 5 19.5H19C20.3807 19.5 21.5 18.3807 21.5 17V7C21.5 5.61929 20.3807 4.5 19 4.5ZM19 17H5V7H19V17ZM17.5 12C17.5 13.1046 16.6046 14 15.5 14H8.5C7.39543 14 6.5 13.1046 6.5 12V10C6.5 8.89543 7.39543 8 8.5 8H15.5C16.6046 8 17.5 8.89543 17.5 10V12ZM21 8.5L23.5 6V18L21 15.5V8.5Z"/>
             </svg>
         </button>
     </div>
@@ -102,12 +121,10 @@
 </div>
 
 <div id="video-call-overlay">
-    <div class="remote-video-container">
-        <video id="remote-video" autoplay playsinline></video>
-        <video id="local-video" autoplay muted playsinline></video>
-    </div>
-    <div style="position:absolute; bottom:50px; width:100%; display:flex; justify-content:center; gap:30px;">
-        <button class="btn btn-danger rounded-circle p-3" onclick="endCall()" style="width:65px; height:65px;">❌</button>
+    <video id="remote-video" autoplay playsinline></video>
+    <video id="local-video" autoplay muted playsinline></video>
+    <div style="position:absolute; bottom:50px; width:100%; text-align:center;">
+        <button class="btn btn-danger rounded-circle p-3" onclick="endCall()" style="width:70px; height:70px;">❌</button>
     </div>
 </div>
 
@@ -125,86 +142,115 @@
             }, 500);
         }, 1500);
 
-        // VN MIC LOGIC (SAMA SEPERTI SEBELUMNYA)
+        // Mic VN Logic
         const micBtn = document.getElementById('vn-btn');
-        micBtn.onmousedown = startVN; micBtn.ontouchstart = (e) => { e.preventDefault(); startVN(); };
-        micBtn.onmouseup = stopVN; micBtn.ontouchend = (e) => { e.preventDefault(); stopVN(); };
+        micBtn.onmousedown = () => micBtn.style.color = 'red';
+        micBtn.onmouseup = () => micBtn.style.color = '';
     };
 
     function handleLogin() {
         const val = document.getElementById('username-input').value.trim();
         const key = localStorage.getItem('_mj_wa_tkn') || new URLSearchParams(window.location.search).get('key');
-        if(!val) return alert("Masukkan Nama!");
+        if(!val) return alert("Isi nama dulu bro!");
         localStorage.setItem('mj_user', val);
-        if(key) localStorage.setItem('_mj_wa_tkn', key);
         location.reload();
     }
 
     function goToHome() { 
         document.getElementById('screen-home').style.display='flex';
-        document.getElementById('screen-login').style.display='none';
-        fetchContacts(); setInterval(fetchContacts, 7000);
+        document.getElementById('display-my-name').innerText = myName;
+        renderAvatar(); fetchContacts(); setInterval(fetchContacts, 7000);
     }
 
-    // VIDEO CALL DENGAN LOUDSPEAKER & RESPONSIVE KLIK
+    // FUNGSI PROFIL & HAPUS USERNAME
+    function toggleDrawer() {
+        const d = document.getElementById('profile-drawer');
+        const o = document.getElementById('drawer-overlay');
+        d.classList.toggle('open');
+        o.style.display = d.classList.contains('open') ? 'block' : 'none';
+    }
+
+    function uploadFoto(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = e => { 
+                localStorage.setItem('mj_foto_asli', e.target.result); 
+                renderAvatar(); 
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function renderAvatar() {
+        const foto = localStorage.getItem('mj_foto_asli');
+        const small = document.getElementById('my-avatar-small');
+        const big = document.getElementById('my-avatar-big');
+        if(foto) {
+            small.innerHTML = `<img src="${foto}">`;
+            big.innerHTML = `<img src="${foto}">`;
+        } else {
+            small.innerText = myName[0].toUpperCase();
+            big.innerText = myName[0].toUpperCase();
+        }
+    }
+
+    function hapusUsername() {
+        if(confirm("Yakin mau hapus username dan logout? Semua data chat lokal akan hilang.")) {
+            localStorage.clear();
+            location.reload();
+        }
+    }
+
+    // VIDEO CALL LOGIC (LOUDSPEAKER)
     async function startVideoCall() {
-        if (!targetPeerId) return alert("Kontak tidak tersedia");
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-            document.getElementById('video-call-overlay').style.display = 'flex';
+            document.getElementById('video-call-overlay').style.display = 'block';
             document.getElementById('local-video').srcObject = stream;
-            
             const call = peer.call(targetPeerId, stream);
-            setupCall(call);
-        } catch (e) { alert("Izinkan Kamera & Mic!"); }
-    }
-
-    function setupCall(call) {
-        currentCall = call;
-        call.on('stream', remoteStream => {
-            const remoteVideo = document.getElementById('remote-video');
-            remoteVideo.srcObject = remoteStream;
-            // FITUR LOUDSPEAKER: Pastikan volume maksimal dan output audio dialihkan
-            remoteVideo.volume = 1.0; 
-            remoteVideo.play();
-        });
+            call.on('stream', rs => {
+                const rv = document.getElementById('remote-video');
+                rv.srcObject = rs;
+                rv.volume = 1.0; // Loudspeaker
+            });
+            currentCall = call;
+        } catch (e) { alert("Izinkan kamera bro!"); }
     }
 
     peer.on('call', call => {
-        if (confirm("Panggilan Video Masuk! Angkat?")) {
+        if(confirm("Panggilan masuk! Angkat?")) {
             navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(stream => {
-                document.getElementById('video-call-overlay').style.display = 'flex';
+                document.getElementById('video-call-overlay').style.display = 'block';
                 document.getElementById('local-video').srcObject = stream;
                 call.answer(stream);
-                setupCall(call);
+                call.on('stream', rs => {
+                    const rv = document.getElementById('remote-video');
+                    rv.srcObject = rs;
+                    rv.volume = 1.0;
+                });
+                currentCall = call;
             });
         }
     });
 
-    function endCall() {
-        if(currentCall) currentCall.close();
-        location.reload();
-    }
+    function endCall() { if(currentCall) currentCall.close(); location.reload(); }
 
-    // LOGIKA CHAT DASAR
+    // CHAT LOGIC
     function sendText() {
         const msg = document.getElementById('text-msg').value.trim();
         if(!msg) return;
         appendUI(myName, msg, 'me', 'text');
         const conn = peer.connect(targetPeerId);
-        conn.on('open', () => {
-            conn.send({ type: 'text', sender: myName, val: msg });
-            saveMsg(targetName, myName, msg, 'me', 'text');
-        });
+        conn.on('open', () => conn.send({ type: 'text', sender: myName, val: msg }));
         document.getElementById('text-msg').value = "";
     }
 
-    peer.on('connection', conn => {
-        conn.on('data', data => {
-            saveMsg(data.sender, data.sender, data.val, 'him', data.type);
-            if(targetName === data.sender) appendUI(data.sender, data.val, 'him', data.type);
-        });
-    });
+    function appendUI(s, t, side, type) {
+        const box = document.getElementById('chat-messages');
+        const div = document.createElement('div'); div.className = `msg ${side}`;
+        div.innerText = t;
+        box.appendChild(div); box.scrollTop = box.scrollHeight;
+    }
 
     async function fetchContacts() {
         try {
@@ -227,31 +273,12 @@
         document.getElementById('chat-window').style.display='flex';
         document.getElementById('chat-with-name').innerText = name;
         document.getElementById('chat-profile-pic').innerText = name[0].toUpperCase();
-        loadHistory(name);
-    }
-
-    function appendUI(s, t, side, type) {
-        const box = document.getElementById('chat-messages');
-        const div = document.createElement('div'); div.className = `msg ${side}`;
-        div.innerHTML = type === 'text' ? t : `<audio controls src="${t}"></audio>`;
-        box.appendChild(div); box.scrollTop = box.scrollHeight;
-    }
-
-    function saveMsg(c, s, t, side, type) {
-        let h = JSON.parse(localStorage.getItem('chat_'+c) || "[]");
-        h.push({sender:s, text:t, side, type});
-        localStorage.setItem('chat_'+c, JSON.stringify(h));
-    }
-
-    function loadHistory(c) {
-        const box = document.getElementById('chat-messages'); box.innerHTML = "";
-        JSON.parse(localStorage.getItem('chat_'+c) || "[]").forEach(m => appendUI(m.sender, m.text, m.side, m.type));
     }
 
     function closeChat() { document.getElementById('chat-window').style.display='none'; }
-    function clearMySession() { localStorage.clear(); location.reload(); }
 
-    // SYNC PEER ID
+    peer.on('open', id => { if(myName) syncContact(myName, id); });
+    
     async function syncContact(n, id) {
         const t = localStorage.getItem('_mj_wa_tkn');
         if(!t) return;
@@ -264,11 +291,7 @@
             });
         } catch(e){}
     }
-    peer.on('open', id => { if(myName) syncContact(myName, id); });
-
-    // VN Placeholder (Logic sama dengan sebelumnya)
-    function startVN() {} function stopVN() {}
 </script>
 </body>
-            </html>
-                
+    </html>
+            
