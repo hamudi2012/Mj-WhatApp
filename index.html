@@ -3,130 +3,184 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mj-WhatsApp Private</title>
+    <title>Mj-WhatsApp</title>
     <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
     <style>
-        :root { --wa-dark: #0b141a; --wa-nav: #202c33; --wa-green: #00a884; }
-        body { background: var(--wa-dark); color: #e9edef; font-family: sans-serif; height: 100dvh; display: flex; flex-direction: column; margin: 0; overflow: hidden; }
-        #login-screen { position: fixed; inset: 0; background: var(--wa-dark); z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; }
-        .header { background: var(--wa-nav); padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; }
-        #contact-list { flex: 1; overflow-y: auto; padding: 10px; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-blend-mode: overlay; }
-        .contact-card { background: var(--wa-nav); padding: 15px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 5px solid var(--wa-green); }
-        .btn-call { background: var(--wa-green); border: none; width: 45px; height: 45px; border-radius: 50%; color: white; font-size: 1.2rem; }
-        #video-area { position: fixed; inset: 0; background: #000; z-index: 2000; display: none; }
+        :root { --wa-dark: #0b141a; --wa-nav: #202c33; --wa-green: #00a884; --wa-bg: #0d1418; }
+        body { background: var(--wa-dark); color: #e9edef; font-family: sans-serif; height: 100dvh; margin: 0; overflow: hidden; }
+        
+        /* LAYAR DAFTAR */
+        #screen-login { position: fixed; inset: 0; background: var(--wa-dark); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; transition: 0.5s; }
+        
+        /* LAYAR HOME */
+        #screen-home { display: none; height: 100%; flex-direction: column; opacity: 0; transition: 0.5s; }
+        
+        .header { background: var(--wa-nav); padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+        
+        /* DAFTAR KONTAK */
+        #contact-list { flex: 1; overflow-y: auto; padding: 15px; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-blend-mode: overlay; background-color: var(--wa-bg); }
+        .contact-item { background: var(--wa-nav); padding: 15px; border-radius: 15px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #333; animation: slideIn 0.3s ease-out; }
+        
+        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .contact-info b { color: var(--wa-green); font-size: 1.1rem; }
+        .contact-info p { margin: 0; font-size: 0.7rem; color: #00e676; font-weight: bold; }
+        
+        .btn-call { background: var(--wa-green); border: none; width: 45px; height: 45px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .btn-call:active { transform: scale(0.9); background: #008f72; }
+
+        /* VIDEO CALL UI */
+        #screen-video { position: fixed; inset: 0; background: #000; z-index: 5000; display: none; }
         #remote-video { width: 100%; height: 100%; object-fit: cover; }
-        #local-video { width: 90px; height: 130px; position: absolute; top: 20px; right: 20px; border: 2px solid var(--wa-green); border-radius: 10px; object-fit: cover; }
+        #local-video { width: 100px; height: 140px; position: absolute; top: 20px; right: 20px; border-radius: 12px; border: 2px solid var(--wa-green); object-fit: cover; z-index: 5001; }
+        .btn-hangup { position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%); background: #ff3b30; border: none; width: 65px; height: 65px; border-radius: 50%; color: white; font-size: 1.5rem; z-index: 5002; }
+
+        /* STATUS */
+        .fade-in { opacity: 1 !important; display: flex !important; }
+        .fade-out { opacity: 0 !important; pointer-events: none; }
     </style>
 </head>
 <body>
 
-<div id="login-screen">
-    <h2 style="color: var(--wa-green); font-weight: 800;">Mj-WhatsApp</h2>
-    <input type="text" id="username-input" class="form-control mb-3 text-center" placeholder="Nama Kamu..." style="background: #2a3942; border: none; color: white;">
-    <button class="btn btn-success w-100" onclick="startApp()">MASUK JARINGAN</button>
+<div id="screen-login">
+    <div style="font-size: 4rem; margin-bottom: 10px;">🟢</div>
+    <h2 style="color: var(--wa-green); font-weight: 900;">Mj-WhatsApp</h2>
+    <p style="color: #888; margin-bottom: 30px;">Automated Private Network</p>
+    <div class="w-100" style="max-width: 300px;">
+        <input type="text" id="username-input" class="form-control mb-3 text-center" placeholder="Nama Kamu..." style="background: #2a3942; border: none; color: white; border-radius: 12px; padding: 12px;">
+        <button class="btn btn-success w-100" onclick="handleLogin()" style="border-radius: 12px; padding: 12px; font-weight: bold;">MASUK</button>
+    </div>
 </div>
 
-<div class="header">
-    <h5 id="my-name-display" style="margin:0; color: var(--wa-green);">Mj-WhatsApp</h5>
-    <button class="btn btn-sm btn-outline-light" onclick="loadContacts()">🔄 Refresh Kontak</button>
+<div id="screen-home">
+    <div class="header">
+        <div>
+            <h5 style="margin:0; color: var(--wa-green); font-weight: bold;">Mj-WhatsApp</h5>
+            <small style="color: #888; font-size: 0.6rem;">User: <span id="my-name-tag" style="color:#00e676">...</span></small>
+        </div>
+        <div style="width: 10px; height: 10px; background: #00e676; border-radius: 50%; box-shadow: 0 0 5px #00e676;"></div>
+    </div>
+    
+    <div id="contact-list">
+        </div>
 </div>
 
-<div id="contact-list">
-    <p class="text-center" style="color:#888; margin-top:50px;">Memuat kontak...</p>
-</div>
-
-<div id="video-area">
+<div id="screen-video">
     <video id="local-video" autoplay muted playsinline></video>
     <video id="remote-video" autoplay playsinline></video>
-    <button class="btn btn-danger" style="position:fixed; bottom:50px; left:50%; transform:translateX(-50%); width:60px; height:60px; border-radius:50%;" onclick="endCall()">×</button>
+    <button class="btn-hangup" onclick="endCall()">×</button>
 </div>
 
 <script>
     const REPO = "hamudi2012/Mj-WhatsApp";
     const peer = new Peer();
     let myName = localStorage.getItem('mj_user');
-    let localStream, currentCall;
+    let localStream, currentCall, lastData = "";
 
-    if(myName) {
-        document.getElementById('login-screen').style.display = 'none';
-        document.getElementById('my-name-display').innerText = myName;
+    window.onload = () => {
+        if (myName) goToHome();
+    };
+
+    function goToHome() {
+        document.getElementById('screen-login').classList.add('fade-out');
+        document.getElementById('screen-home').classList.add('fade-in');
+        document.getElementById('my-name-tag').innerText = myName;
+        
+        // JALANKAN MESIN OTOMATIS
+        startAutoRefresh();
     }
 
-    // SAAT USER DAPAT ID PEER
+    async function handleLogin() {
+        const input = document.getElementById('username-input').value.trim();
+        if (!input) return alert("Namanya mana bro?");
+        localStorage.setItem('mj_user', input);
+        myName = input;
+        goToHome();
+        if (peer.id) syncID(input, peer.id);
+    }
+
     peer.on('open', id => {
-        if(myName) syncContact(myName, id);
+        if (myName) syncID(myName, id);
     });
 
-    async function startApp() {
-        const name = document.getElementById('username-input').value.trim();
-        if(!name) return alert("Isi nama dulu!");
-        localStorage.setItem('mj_user', name);
-        location.reload();
-    }
-
-    // SISTEM AUTO-DATABASE (Full Atek GitHub API)
-    async function syncContact(name, id) {
-        const token = localStorage.getItem('_mj_wa_tkn'); // Token Admin
-        if(!token) return loadContacts(); 
-
+    // MESIN DATABASE (Background Sync)
+    async function syncID(name, id) {
+        const token = localStorage.getItem('_mj_wa_tkn');
+        if (!token) return;
         try {
             const res = await fetch(`https://api.github.com/repos/${REPO}/contents/contacts.json`, {
                 headers: { 'Authorization': `token ${token}` }
             });
             const data = await res.json();
             const contacts = JSON.parse(atob(data.content));
-            
-            // Tambah/Update ID user
-            contacts[name] = id;
+            if(contacts[name] === id) return; // Udah sama, gausah update
 
+            contacts[name] = id;
             await fetch(`https://api.github.com/repos/${REPO}/contents/contacts.json`, {
                 method: 'PUT',
                 headers: { 'Authorization': `token ${token}` },
                 body: JSON.stringify({
-                    message: "Sync Contact",
+                    message: "Auto-Sync",
                     content: btoa(JSON.stringify(contacts)),
                     sha: data.sha
                 })
             });
-            loadContacts();
-        } catch(e) { console.error("Sync Gagal", e); loadContacts(); }
+        } catch(e) {}
     }
 
-    async function loadContacts() {
-        const list = document.getElementById('contact-list');
+    // MESIN REFRESH OTOMATIS (Tiap 5 Detik)
+    function startAutoRefresh() {
+        fetchContacts(); // Load pertama kali
+        setInterval(fetchContacts, 5000); // Terus cek tiap 5 detik
+    }
+
+    async function fetchContacts() {
         try {
             const res = await fetch(`https://raw.githubusercontent.com/${REPO}/main/contacts.json?t=${Date.now()}`);
-            const contacts = await res.json();
+            const textData = await res.text();
+            if (textData === lastData) return; // Gak ada perubahan, gausah render ulang
+            lastData = textData;
+            
+            const contacts = JSON.parse(textData);
+            const list = document.getElementById('contact-list');
             list.innerHTML = "";
+            
             for(let name in contacts) {
-                if(name === myName) continue; // Jangan telpon diri sendiri
-                const card = document.createElement('div');
-                card.className = "contact-card";
-                card.innerHTML = `<span><b>${name}</b><br><small style="color:#888">Online</small></span>
-                                  <button class="btn-call" onclick="makeCall('${contacts[name]}')">📞</button>`;
-                list.appendChild(card);
+                if(name === myName) continue;
+                const div = document.createElement('div');
+                div.className = "contact-item";
+                div.innerHTML = `
+                    <div class="contact-info">
+                        <b>${name}</b>
+                        <p>● Online</p>
+                    </div>
+                    <button class="btn-call" onclick="startCall('${contacts[name]}')">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="white"><path d="M20 15.5c-1.2 0-2.4-.2-3.6-.6-.3-.1-.7 0-1 .2l-2.2 2.2c-2.8-1.4-5.1-3.8-6.6-6.6l2.2-2.2c.3-.3.4-.7.2-1-.3-1.1-.5-2.3-.5-3.5 0-.6-.4-1-1-1H4c-.6 0-1 .4-1 1 0 9.4 7.6 17 17 17 .6 0 1-.4 1-1v-3.5c0-.6-.4-1-1-1zM19 12h2c0-4.8-3.9-9-9-9v2c3.9 0 7 3.1 7 7zm-4 0h2c0-2.8-2.2-5-5-5v2c1.7 0 3 1.3 3 3z"></path></svg>
+                    </button>
+                `;
+                list.appendChild(div);
             }
-        } catch(e) { list.innerHTML = "Gagal memuat kontak."; }
+        } catch(e) {}
     }
 
-    function makeCall(tid) {
+    function startCall(targetId) {
         navigator.mediaDevices.getUserMedia({video: true, audio: true}).then(stream => {
             localStream = stream;
             document.getElementById('local-video').srcObject = stream;
-            document.getElementById('video-area').style.display = 'block';
-            const call = peer.call(tid, stream);
+            document.getElementById('screen-video').style.display = 'block';
+            const call = peer.call(targetId, stream);
             call.on('stream', rs => document.getElementById('remote-video').srcObject = rs);
             currentCall = call;
-        });
+        }).catch(() => alert("Izin kamera ditolak!"));
     }
 
     peer.on('call', call => {
-        if(confirm("Video Call Masuk!")) {
+        if(confirm("Panggilan video masuk! Terima?")) {
             navigator.mediaDevices.getUserMedia({video: true, audio: true}).then(stream => {
                 localStream = stream;
                 document.getElementById('local-video').srcObject = stream;
-                document.getElementById('video-area').style.display = 'block';
+                document.getElementById('screen-video').style.display = 'block';
                 call.answer(stream);
                 call.on('stream', rs => document.getElementById('remote-video').srcObject = rs);
                 currentCall = call;
@@ -137,7 +191,7 @@
     function endCall() {
         if(currentCall) currentCall.close();
         if(localStream) localStream.getTracks().forEach(t => t.stop());
-        document.getElementById('video-area').style.display = 'none';
+        document.getElementById('screen-video').style.display = 'none';
     }
 </script>
 </body>
