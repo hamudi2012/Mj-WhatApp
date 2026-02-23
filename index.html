@@ -3,76 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mj-WhatsApp Ultimate</title>
+    <title>Mj-WhatsApp Ultimate V5</title>
     
     <link rel="icon" type="image/png" href="logo-mj-whatsapp.png">
+    <link rel="apple-touch-icon" href="logo-mj-whatsapp.png">
+
     <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
     
     <style>
-        :root { --wa-bg: #0b141a; --wa-nav: #202c33; --wa-green: #00a884; --wa-msg-me: #005c4b; --wa-msg-him: #202c33; }
-        body { background: var(--wa-bg); color: #e9edef; font-family: 'Segoe UI', sans-serif; height: 100dvh; margin: 0; overflow: hidden; }
+        :root { --wa-bg: #0b141a; --wa-nav: #202c33; --wa-green: #00a884; --wa-msg-me: #005c4b; --wa-msg-him: #202c33; --wa-text: #e9edef; }
+        body { background: var(--wa-bg); color: var(--wa-text); font-family: 'Segoe UI', sans-serif; height: 100dvh; margin: 0; overflow: hidden; }
 
-        /* UI SCREENS */
-        #screen-login, #screen-home, #chat-window { position: fixed; inset: 0; display: none; flex-direction: column; }
-        .nav-header { background: var(--wa-nav); padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+        /* SPLASH SCREEN */
+        #splash-screen { position: fixed; inset: 0; background: var(--wa-bg); z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s ease; }
+        .splash-logo { width: 100px; height: 100px; border-radius: 25px; margin-bottom: 20px; box-shadow: 0 0 20px rgba(0,168,132,0.3); }
 
         /* VIDEO CALL UI */
         #video-call-overlay { position: fixed; inset: 0; background: black; z-index: 5000; display: none; flex-direction: column; }
         .remote-video { width: 100%; height: 100%; object-fit: cover; }
-        .local-video { width: 120px; height: 160px; position: absolute; top: 20px; right: 20px; border-radius: 10px; border: 2px solid var(--wa-green); object-fit: cover; z-index: 5001; }
-        .call-controls { position: absolute; bottom: 40px; width: 100%; display: flex; justify-content: center; gap: 30px; z-index: 5002; }
-        .btn-end-call { background: #ff3b30; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: none; color: white; }
+        .local-video { width: 100px; height: 140px; position: absolute; top: 20px; right: 20px; border-radius: 10px; border: 2px solid var(--wa-green); object-fit: cover; z-index: 5001; }
+        .call-controls { position: absolute; bottom: 40px; width: 100%; display: flex; justify-content: center; z-index: 5002; }
 
-        /* CHAT BUBBLE */
-        #chat-messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; background-color: #0d1418; }
-        .msg { max-width: 80%; padding: 10px; border-radius: 12px; font-size: 0.95rem; color: white; }
-        .msg.me { align-self: flex-end; background: var(--wa-msg-me); }
-        .msg.him { align-self: flex-start; background: var(--wa-msg-him); }
-
-        /* INPUT AREA */
-        .chat-input-area { background: var(--wa-nav); padding: 12px; display: flex; gap: 10px; align-items: center; }
-        .chat-input-area input { flex: 1; background: #2a3942; border: none; color: white; border-radius: 25px; padding: 10px 15px; }
-        .btn-vn { background: none; border: none; color: #8696a0; font-size: 1.5rem; transition: 0.3s; }
-        .btn-vn.recording { color: #ff3b30; transform: scale(1.3); }
+        /* CONTACTS & CHAT */
+        #screen-login, #screen-home, #chat-window { position: fixed; inset: 0; display: none; flex-direction: column; background: var(--wa-bg); }
+        .nav-header { background: var(--wa-nav); padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; }
+        #contact-list { flex: 1; overflow-y: auto; padding: 10px 0; }
+        .contact-item { padding: 12px 16px; border-bottom: 0.5px solid #222; display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
+        .avatar { width: 45px; height: 45px; background: var(--wa-green); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        
+        #chat-messages { flex: 1; overflow-y: auto; padding: 20px 15px; display: flex; flex-direction: column; gap: 10px; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-color: #0b141a; background-blend-mode: overlay; }
+        .msg { max-width: 80%; padding: 8px 12px; border-radius: 12px; font-size: 0.9rem; position: relative; color: white; }
+        .msg.me { align-self: flex-end; background: var(--wa-msg-me); border-top-right-radius: 0; }
+        .msg.him { align-self: flex-start; background: var(--wa-msg-him); border-top-left-radius: 0; }
+        
+        .chat-input-area { background: var(--wa-nav); padding: 10px; display: flex; gap: 8px; align-items: center; }
+        .chat-input-area input { flex: 1; background: #2a3942; border: none; color: white; border-radius: 20px; padding: 8px 15px; }
+        .btn-vn.recording { color: #ff3b30; transform: scale(1.2); }
     </style>
 </head>
 <body>
+
+<div id="splash-screen">
+    <img src="logo-mj-whatsapp.png" class="splash-logo" onerror="this.src='https://cdn-icons-png.flaticon.com/512/124/124034.png'">
+    <h4 class="fw-bold">Mj-WhatsApp</h4>
+</div>
 
 <div id="video-call-overlay">
     <video id="remote-video" class="remote-video" autoplay playsinline></video>
     <video id="local-video" class="local-video" autoplay muted playsinline></video>
     <div class="call-controls">
-        <button class="btn-end-call" onclick="endCall()">❌</button>
+        <button class="btn btn-danger rounded-circle p-3" onclick="endCall()">❌</button>
     </div>
 </div>
 
-<div id="screen-login" class="justify-content-center p-4 text-center">
-    <h2 class="text-success fw-bold">Mj-WhatsApp</h2>
-    <input type="text" id="username-input" class="form-control mb-3" placeholder="Nama..." style="background:#2a3942;color:white;border:none;">
-    <button class="btn btn-success w-100" onclick="handleLogin()">MASUK</button>
+<div id="screen-login" class="justify-content-center p-4">
+    <div class="text-center mb-4">
+        <img src="logo-mj-whatsapp.png" style="width:70px; border-radius:15px;">
+        <h3 class="mt-3 fw-bold">Masuk Mj-WA</h3>
+    </div>
+    <input type="text" id="username-input" class="form-control mb-3" placeholder="Siapa nama lo?" style="background:#2a3942;color:white;border:none;">
+    <button class="btn btn-success w-100 fw-bold" onclick="handleLogin()">GAS CHAT!</button>
 </div>
 
 <div id="screen-home">
     <div class="nav-header">
-        <b>Mj-WhatsApp</b>
-        <button class="btn btn-sm btn-outline-danger" onclick="clearIdentity()">Hapus User</button>
+        <b class="text-success">Mj-WhatsApp</b>
+        <button class="btn btn-sm btn-outline-light" onclick="clearMySession()">Keluar</button>
     </div>
-    <div id="contact-list" class="flex-grow-1 overflow-auto p-2"></div>
+    <div id="contact-list"></div>
 </div>
 
 <div id="chat-window">
     <div class="nav-header">
         <div class="d-flex align-items-center">
             <button onclick="closeChat()" class="btn text-white p-0 me-3">←</button>
-            <b id="chat-with-name"></b>
+            <div><b id="chat-with-name"></b><br><small class="text-success" style="font-size:0.6rem">online</small></div>
         </div>
-        <button onclick="startVideoCall()" style="background:none;border:none;font-size:1.5rem;">📹</button>
+        <button onclick="startVideoCall()" style="background:none;border:none;font-size:1.4rem;">📹</button>
     </div>
     <div id="chat-messages"></div>
     <div class="chat-input-area">
-        <input type="text" id="text-msg" placeholder="Pesan..." onkeypress="if(event.key==='Enter') sendText()">
-        <button id="vn-btn" class="btn-vn" onmousedown="startVN()" onmouseup="stopVN()" ontouchstart="startVN()" ontouchend="stopVN()">🎤</button>
+        <input type="text" id="text-msg" placeholder="Ketik pesan..." onkeypress="if(event.key==='Enter') sendText()">
+        <button id="vn-btn" class="btn text-secondary" onmousedown="startVN()" onmouseup="stopVN()" ontouchstart="startVN()" ontouchend="stopVN()">🎤</button>
         <button onclick="sendText()" class="btn btn-success rounded-circle">➤</button>
     </div>
 </div>
@@ -85,14 +98,15 @@
     let myName = localStorage.getItem('mj_user'), targetPeerId, targetName, currentCall;
     let mediaRecorder, audioChunks = [];
 
-    window.onload = () => { 
-        if (myName) { goToHome(); } else { document.getElementById('screen-login').style.display='flex'; }
+    window.onload = () => {
+        setTimeout(() => {
+            document.getElementById('splash-screen').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('splash-screen').style.display = 'none';
+                if (myName) { goToHome(); } else { document.getElementById('screen-login').style.display = 'flex'; }
+            }, 500);
+        }, 2000);
     };
-
-    function goToHome() { 
-        document.getElementById('screen-home').style.display='flex';
-        fetchContacts(); setInterval(fetchContacts, 5000);
-    }
 
     function handleLogin() {
         const val = document.getElementById('username-input').value.trim();
@@ -102,37 +116,32 @@
         location.reload();
     }
 
-    function clearIdentity() { localStorage.removeItem('mj_user'); location.reload(); }
+    function clearMySession() { if(confirm("Keluar dari aplikasi?")) { localStorage.removeItem('mj_user'); location.reload(); } }
 
-    // PEER LOGIC
-    peer.on('open', id => { if(myName) syncContact(myName, id); });
+    function goToHome() { 
+        document.getElementById('screen-home').style.display='flex';
+        fetchContacts(); setInterval(fetchContacts, 7000);
+    }
 
-    // TERIMA VIDEO CALL
+    // TERIMA CALL
     peer.on('call', call => {
-        if(confirm("Video Call Masuk! Angkat?")) {
+        if(confirm("Video Call Masuk dari seseorang! Angkat?")) {
             navigator.mediaDevices.getUserMedia({video: true, audio: true}).then(stream => {
                 document.getElementById('video-call-overlay').style.display = 'flex';
                 document.getElementById('local-video').srcObject = stream;
                 call.answer(stream);
-                call.on('stream', remoteStream => {
-                    document.getElementById('remote-video').srcObject = remoteStream;
-                });
+                call.on('stream', rs => document.getElementById('remote-video').srcObject = rs);
                 currentCall = call;
             });
         }
     });
 
-    // TERIMA DATA (TEXT / VOICE NOTE)
+    // TERIMA PESAN
     peer.on('connection', conn => {
         conn.on('data', data => {
-            if(data.type === 'text') {
-                saveMsg(data.sender, data.sender, data.val, 'him', 'text');
-                if(targetName === data.sender) appendUI(data.sender, data.val, 'him', 'text');
-            } else if (data.type === 'vn') {
-                saveMsg(data.sender, data.sender, data.val, 'him', 'vn');
-                if(targetName === data.sender) appendUI(data.sender, data.val, 'him', 'vn');
-            }
-            document.getElementById('notif-sound').play();
+            saveMsg(data.sender, data.sender, data.val, 'him', data.type);
+            if(targetName === data.sender) appendUI(data.sender, data.val, 'him', data.type);
+            document.getElementById('notif-sound').play().catch(e=>{});
         });
     });
 
@@ -142,78 +151,50 @@
             document.getElementById('video-call-overlay').style.display = 'flex';
             document.getElementById('local-video').srcObject = stream;
             const call = peer.call(targetPeerId, stream);
-            call.on('stream', remoteStream => {
-                document.getElementById('remote-video').srcObject = remoteStream;
-            });
+            call.on('stream', rs => document.getElementById('remote-video').srcObject = rs);
             currentCall = call;
         });
     }
-
-    function endCall() {
-        if(currentCall) currentCall.close();
-        document.getElementById('video-call-overlay').style.display = 'none';
-        location.reload();
-    }
+    function endCall() { if(currentCall) currentCall.close(); location.reload(); }
 
     // FITUR VOICE NOTE
     function startVN() {
         navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
-            mediaRecorder = new MediaRecorder(stream);
-            mediaRecorder.start();
-            audioChunks = [];
-            document.getElementById('vn-btn').classList.add('recording');
+            mediaRecorder = new MediaRecorder(stream); mediaRecorder.start();
+            audioChunks = []; document.getElementById('vn-btn').classList.add('recording');
             mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
         });
     }
-
     function stopVN() {
         if(!mediaRecorder) return;
-        mediaRecorder.stop();
-        document.getElementById('vn-btn').classList.remove('recording');
+        mediaRecorder.stop(); document.getElementById('vn-btn').classList.remove('recording');
         mediaRecorder.onstop = () => {
-            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-            const reader = new FileReader();
-            reader.readAsDataURL(audioBlob);
-            reader.onloadend = () => {
-                const base64Audio = reader.result;
-                sendData(base64Audio, 'vn');
-                appendUI(myName, base64Audio, 'me', 'vn');
-            };
+            const blob = new Blob(audioChunks, { type: 'audio/webm' });
+            const reader = new FileReader(); reader.readAsDataURL(blob);
+            reader.onloadend = () => { sendData(reader.result, 'vn'); appendUI(myName, reader.result, 'me', 'vn'); };
         };
     }
 
     function sendText() {
-        const val = document.getElementById('text-msg').value.trim();
-        if(!val) return;
-        sendData(val, 'text');
-        appendUI(myName, val, 'me', 'text');
+        const msg = document.getElementById('text-msg').value.trim();
+        if(!msg) return;
+        sendData(msg, 'text'); appendUI(myName, msg, 'me', 'text');
         document.getElementById('text-msg').value = "";
     }
 
     function sendData(val, type) {
         saveMsg(targetName, myName, val, 'me', type);
         const conn = peer.connect(targetPeerId);
-        conn.on('open', () => { conn.send({ type, sender: myName, val }); });
+        conn.on('open', () => conn.send({ type, sender: myName, val }));
     }
 
     function appendUI(s, t, side, type) {
         const box = document.getElementById('chat-messages');
-        const div = document.createElement('div');
-        div.className = `msg ${side}`;
-        if(type === 'text') {
-            div.innerHTML = `<small class="text-success fw-bold">${s}</small><div>${t}</div>`;
-        } else {
-            div.innerHTML = `<small class="text-success fw-bold">${s}</small><br><audio controls src="${t}" style="width:200px; height:30px;"></audio>`;
-        }
-        box.appendChild(div);
-        box.scrollTop = box.scrollHeight;
-    }
-
-    // LOCAL STORAGE PERSISTENCE
-    function saveMsg(chatWith, sender, text, side, type) {
-        let h = JSON.parse(localStorage.getItem('chat_'+chatWith) || "[]");
-        h.push({sender, text, side, type});
-        localStorage.setItem('chat_'+chatWith, JSON.stringify(h));
+        const div = document.createElement('div'); div.className = `msg ${side}`;
+        const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        let content = type === 'text' ? `<div>${t}</div>` : `<audio controls src="${t}" style="width:180px;height:30px;"></audio>`;
+        div.innerHTML = `<small class="text-info fw-bold" style="font-size:0.7rem">${s}</small>${content}<div style="font-size:0.5rem;text-align:right;opacity:0.5">${time}</div>`;
+        box.appendChild(div); box.scrollTop = box.scrollHeight;
     }
 
     async function fetchContacts() {
@@ -223,24 +204,49 @@
             const list = document.getElementById('contact-list'); list.innerHTML = "";
             for(let n in data) {
                 if(n === myName) continue;
-                const div = document.createElement('div');
-                div.className = "p-3 border-bottom d-flex align-items-center gap-3";
-                div.onclick = () => {
-                    targetName = n; targetPeerId = data[n];
-                    document.getElementById('chat-window').style.display='flex';
-                    document.getElementById('chat-with-name').innerText = n;
-                    loadHistory(n);
-                };
-                div.innerHTML = `<div style="width:40px;height:40px;background:var(--wa-green);border-radius:50%;text-align:center;line-height:40px;font-weight:bold;">${n[0].toUpperCase()}</div><b>${n}</b>`;
-                list.appendChild(div);
+                const item = document.createElement('div'); item.className = "contact-item";
+                item.innerHTML = `
+                    <div class="d-flex align-items-center gap-3" onclick="openChat('${n}', '${data[n]}')">
+                        <div class="avatar">${n[0].toUpperCase()}</div>
+                        <b>${n}</b>
+                    </div>
+                    <button class="btn btn-sm text-danger" onclick="deleteUser('${n}')">🗑️</button>
+                `;
+                list.appendChild(item);
             }
         } catch(e){}
     }
 
-    function loadHistory(chatWith) {
+    function openChat(name, id) {
+        targetName = name; targetPeerId = id;
+        document.getElementById('chat-window').style.display='flex';
+        document.getElementById('chat-with-name').innerText = name;
+        loadHistory(name);
+    }
+
+    async function deleteUser(userName) {
+        if(!confirm(`Hapus ${userName} dari daftar?`)) return;
+        const t = localStorage.getItem('_mj_wa_tkn');
+        const r = await fetch(`https://api.github.com/repos/${REPO}/contents/contacts.json`, {headers:{'Authorization':`token ${t}`}});
+        const d = await r.json();
+        const c = JSON.parse(atob(d.content));
+        delete c[userName];
+        await fetch(`https://api.github.com/repos/${REPO}/contents/contacts.json`, {
+            method:'PUT', headers:{'Authorization':`token ${t}`},
+            body:JSON.stringify({message:`Hapus ${userName}`, content:btoa(JSON.stringify(c)), sha:d.sha})
+        });
+        fetchContacts();
+    }
+
+    function saveMsg(c, s, t, side, type) {
+        let h = JSON.parse(localStorage.getItem('chat_'+c) || "[]");
+        h.push({sender:s, text:t, side, type});
+        localStorage.setItem('chat_'+c, JSON.stringify(h));
+    }
+
+    function loadHistory(c) {
         const box = document.getElementById('chat-messages'); box.innerHTML = "";
-        let h = JSON.parse(localStorage.getItem('chat_'+chatWith) || "[]");
-        h.forEach(m => appendUI(m.sender, m.text, m.side, m.type));
+        JSON.parse(localStorage.getItem('chat_'+c) || "[]").forEach(m => appendUI(m.sender, m.text, m.side, m.type));
     }
 
     function closeChat() { document.getElementById('chat-window').style.display='none'; }
@@ -249,14 +255,14 @@
         const t = localStorage.getItem('_mj_wa_tkn');
         try {
             const r = await fetch(`https://api.github.com/repos/${REPO}/contents/contacts.json`, {headers:{'Authorization':`token ${t}`}});
-            const d = await r.json(); 
-            const c = JSON.parse(atob(d.content)); c[n]=id;
+            const d = await r.json(); const c = JSON.parse(atob(d.content)); c[n]=id;
             await fetch(`https://api.github.com/repos/${REPO}/contents/contacts.json`, {
-                method:'PUT', headers:{'Authorization':`token ${t}`}, 
+                method:'PUT', headers:{'Authorization':`token ${t}`},
                 body:JSON.stringify({message:"Update ID", content:btoa(JSON.stringify(c)), sha:d.sha})
             });
         } catch(e){}
     }
+    peer.on('open', id => { if(myName) syncContact(myName, id); });
 </script>
 </body>
 </html>
